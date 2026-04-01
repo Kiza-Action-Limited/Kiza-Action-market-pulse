@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import marketPulseLogo from '../assets/Marketpulse-logo.png';
 const currentYear = new Date().getFullYear();
 
 const Footer = () => {
@@ -10,7 +11,11 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">Market Pulse</h3>
+            <img
+              src={marketPulseLogo}
+              alt="Lango Market Pulse"
+              className="h-12 sm:h-14 w-auto max-w-[220px] object-contain mb-4"
+            />
             <p className="text-gray-400">
               Connect with brands, wholesalers, manufacturers, retailers, farmers, and small businesses all in one place.
             </p>

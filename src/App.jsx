@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from './components/errorBoundary';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -27,7 +27,7 @@ import Categories from './pages/Categories';
 import Wishlist from './pages/Wishlists';
 import Reviews from './pages/Reviews';
 import About from './pages/About';
-import NotFound from './pages/NotFound';
+import NotFound from './pages/notFound';
 
 // Seller Pages
 import SellerDashboard from './pages/SellerDashboard';
@@ -71,7 +71,7 @@ function App() {
                   
                   {/* Protected Routes */}
                   <Route element={<ProtectedRoute />}>
-                  
+
                     <Route path="checkout" element={<Checkout />} />
                     <Route path="orders" element={<Orders />} />
                     <Route path="orders/:id/track" element={<OrderTracking />} />

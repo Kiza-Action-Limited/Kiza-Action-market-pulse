@@ -1,9 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1d4ed8;
-  --color-primary-dark: #1e3a8a;
-  --color-primary-light: #60a5fa;
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
+  --color-primary-light: #fb923c;
+  --color-intelligence: #fb923c;
+  --color-intelligence-dark: #ea580c;
   --color-dark: #0b1220;
   --color-secondary: #ffffff;
 }
@@ -14,14 +16,41 @@
   box-sizing: border-box;
 }
 
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
   background: #f8fafc;
   color: var(--color-dark);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+img,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+select,
+textarea {
+  font: inherit;
 }
 
 a {
@@ -67,7 +96,7 @@ a {
 
 .input-field:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(29 78 216 / 0.15);
+  box-shadow: 0 0 0 3px rgb(249 115 22 / 0.2);
 }
 
 .input-field::placeholder {

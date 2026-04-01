@@ -1,13 +1,13 @@
 /* src/styles/globals.css */
-@tailwind base;
+@tailwind/preflight;
 @tailwind utilities;
-@tailwind components;
 
 @layer base {
   :root {
-    --primary: #1E40AF;
-    --primary-dark: #1E3A8A;
-    --primary-light: #3B82F6;
+    --primary: #F97316;
+    --primary-dark: #EA580C;
+    --primary-light: #FB923C;
+    --intelligence: #FB923C;
     --secondary: #FFFFFF;
     --dark: #000000;
   }

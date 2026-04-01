@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 import SearchBar from './SearchBar';
 import DepartmentsMenu from './DepartmentMenu';
+import marketPulseLogo from '../assets/Marketpulse-logo.png';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout, isAdmin, isSeller } = useAuth();
@@ -49,8 +50,8 @@ const Navbar = () => {
       {/* Main Navbar - Amazon style */}
       <nav className="bg-primary text-white sticky top-0 z-50">
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between py-3 md:py-4 flex-wrap gap-y-3">
-            <div className="flex items-center gap-3 mr-4">
+          <div className="flex items-center justify-between py-3 md:py-4 flex-wrap md:flex-nowrap gap-2 sm:gap-3">
+            <div className="flex items-center gap-3 shrink-0">
                   {/* Departments sidebar toggle beside logo */}
               <button
                 onClick={() => setIsDepartmentsOpen(true)}
@@ -61,8 +62,13 @@ const Navbar = () => {
                 <span className="hidden sm:inline">All</span>
               </button>
               {/* Logo */}
-              <Link to="/" className="text-2xl md:text-3xl font-bold hover:opacity-80 transition">
-                MarketPulse
+              <Link to="/" className="flex items-center hover:opacity-90 transition" aria-label="MarketPulse Home">
+                <img
+                  src={marketPulseLogo}
+                  alt="Lango Market Pulse"
+                  className="h-9 sm:h-10 md:h-12 w-auto max-w-[160px] sm:max-w-[210px] object-contain"
+                />
+                <span className="text-[#f3f2f2] font-bold text-base sm:text-lg">Market Pulse</span>
               </Link>
 
             
@@ -77,14 +83,14 @@ const Navbar = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="flex-1 max-w-3xl mx-4 relative">
+            <div className="order-3 w-full md:order-none md:flex-1 md:max-w-3xl md:mx-4 relative">
               <SearchBar />
             </div>
 
             {/* Right side: Account, Orders, Cart */}
-            <div className="flex items-center space-x-5 md:space-x-6">
+            <div className="ml-auto flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
               {/* Notifications */}
-              <div className="relative">
+              <div className="relative hidden sm:block">
                 <button
                   className="relative hover:text-primary-light transition"
                 >
@@ -98,7 +104,7 @@ const Navbar = () => {
               </div>
 
               {/* Account & Lists */}
-              <div className="relative user-menu">
+              <div className="relative user-menu hidden sm:block">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex flex-col items-start text-sm md:text-base hover:opacity-80"
@@ -182,36 +188,32 @@ const Navbar = () => {
               </div>
 
               {/* Returns & Orders */}
-              <Link to="/orders" className="flex flex-col items-start text-sm md:text-base hover:opacity-80">
+              <Link to="/orders" className="hidden lg:flex flex-col items-start text-sm md:text-base hover:opacity-80">
                 <span className="text-xs md:text-sm">Returns</span>
                 <span className="font-semibold">& Orders</span>
               </Link>
 
               {/* Cart */}
               <Link to="/cart" className="relative hover:opacity-80 flex items-center text-base">
-                <FaShoppingCart size={28} />
+                <FaShoppingCart size={24} />
                 {cartCount > 0 && (
                   <span className="absolute -top-2 -right-3 bg-yellow-400 text-dark text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
                     {cartCount}
                   </span>
                 )}
-                <span className="ml-2 font-semibold">Cart</span>
+                <span className="ml-2 font-semibold hidden sm:inline">Cart</span>
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden"
+              className="md:hidden shrink-0"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
             </button>
           </div>
 
-          {/* Mobile Search */}
-          <div className="md:hidden pb-2">
-            <SearchBar />
-          </div>
         </div>
       </nav>
 

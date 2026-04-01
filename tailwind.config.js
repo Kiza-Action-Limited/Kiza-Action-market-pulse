@@ -8,11 +8,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#1E40AF', // blue
+        primary: '#1E3A8A', // trust + platform core
         secondary: '#FFFFFF', // white
         dark: '#000000', // black
-        'primary-dark': '#1E3A8A',
-        'primary-light': '#3B82F6',
+        'primary-dark': '#172554',
+        'primary-light': '#7C3AED',
+        intelligence: '#7C3AED', // AI layer
+        'intelligence-dark': '#6D28D9',
       }
     },
   },

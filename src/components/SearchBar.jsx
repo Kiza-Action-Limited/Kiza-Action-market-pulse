@@ -15,13 +15,13 @@ const SearchBar = () => {
   };
 
   return (
-    <form onSubmit={handleSearch} className="relative">
+    <form onSubmit={handleSearch} className="relative w-full">
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search products by name or category..."
-        className="w-full px-4 py-2 pr-10 rounded-lg text-dark focus:outline-none focus:ring-2 focus:ring-primary-light"
+        className="w-full h-11 px-4 py-2 pr-10 rounded-lg border-2 border-white text-sm sm:text-base text-dark focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-white"
       />
       <button
         type="submit"
