@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { FaPlus, FaEdit, FaTrash, FaChartLine, FaBox, FaDollarSign, FaShoppingCart } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaChartLine, FaBox, FaDollarSign, FaShoppingCart, FaLock, FaUnlockAlt, FaBrain } from 'react-icons/fa';
 import { formatCurrency } from '../utils/formatters';
+import { SUBSCRIPTION_FEATURES } from '../config/subscriptionPlans';
 
 const SellerDashboard = () => {
-  const { token } = useAuth();
+  const { token, activePlan, hasFeature } = useAuth();
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalOrders: 0,
@@ -66,14 +67,94 @@ const SellerDashboard = () => {
     );
   }
 
+  const intelligenceCards = [
+    {
+      key: SUBSCRIPTION_FEATURES.GUARDIAN_REGIONAL_ALARM,
+      title: 'Guardian Regional Alarm',
+      description: 'Monitors regional scarcity and notifies you before stockouts hit margins.',
+    },
+    {
+      key: SUBSCRIPTION_FEATURES.CFO_LITE_HOOK,
+      title: 'CFO Hook',
+      description: 'Tracks logistics and SMS cost impact against your profit flow.',
+    },
+    {
+      key: SUBSCRIPTION_FEATURES.CLEARANCE_AGENT,
+      title: 'Clearance Agent',
+      description: 'Flags slow movers and suggests targeted discounts to recover working capital.',
+    },
+    {
+      key: SUBSCRIPTION_FEATURES.CASHFLOW_PREDICTION,
+      title: 'Cash Flow Prediction',
+      description: 'Warns if wallet balance may be insufficient for upcoming obligations.',
+    },
+  ];
+  const canManageInventory = hasFeature(SUBSCRIPTION_FEATURES.INVENTORY_LEDGER);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Seller Dashboard</h1>
-        <Link to="/seller/add-product" className="btn-primary flex items-center space-x-2">
-          <FaPlus />
-          <span>Add Product</span>
-        </Link>
+        <div>
+          <h1 className="text-3xl font-bold">Seller Dashboard</h1>
+          {activePlan && (
+            <p className="text-sm text-gray-600 mt-1">
+              Active tier: <span className="font-semibold">{activePlan.name}</span> ({activePlan.priceLabel})
+            </p>
+          )}
+        </div>
+        {canManageInventory ? (
+          <Link to="/seller/add-product" className="btn-primary flex items-center space-x-2">
+            <FaPlus />
+            <span>Add Product</span>
+          </Link>
+        ) : (
+          <Link
+            to="/subscription-plans"
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition flex items-center space-x-2"
+          >
+            <FaLock />
+            <span>Upgrade To Add Product</span>
+          </Link>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <FaBrain className="text-[#F97316]" />
+            <h2 className="text-xl font-semibold">Operational Intelligence</h2>
+          </div>
+          <Link to="/subscription-plans" className="text-sm text-primary hover:underline">
+            View All Plans
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {intelligenceCards.map((card) => {
+            const enabled = hasFeature(card.key);
+            return (
+              <div
+                key={card.key}
+                className={`rounded-lg border p-4 ${
+                  enabled ? 'border-green-200 bg-green-50/60' : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                <div className="flex justify-between items-start gap-3 mb-2">
+                  <h3 className="font-semibold text-gray-900">{card.title}</h3>
+                  {enabled ? (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                      <FaUnlockAlt size={12} /> Enabled
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">
+                      <FaLock size={11} /> Locked
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">{card.description}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
       
       {/* Stats Cards */}

@@ -151,7 +151,7 @@ const AdminDashboard = ({ section = 'dashboard' }) => {
           </div>
 
           {/* AI Intelligence Summary */}
-          <div className="mt-8 bg-gradient-to-r from-[#F97316] to-[#FB923C] rounded-xl p-6 text-white">
+          <div className="mt-8 bg-linear-to-r from-[#F97316] to-[#FB923C] rounded-xl p-6 text-white">
             <div className="flex items-center gap-3 mb-3">
               <FaChartLine className="text-2xl" />
               <h3 className="text-xl font-semibold">Platform Intelligence</h3>
@@ -190,7 +190,7 @@ const AdminDashboard = ({ section = 'dashboard' }) => {
           
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto overscroll-x-contain pb-1">
-              <table className="w-full min-w-[860px]">
+              <table className="w-full min-w-215">
                 <thead className="bg-[#F97316] text-white">
                   <tr className="text-left">
                     <th className="px-6 py-3">Name</th>
@@ -290,7 +290,7 @@ const AdminDashboard = ({ section = 'dashboard' }) => {
           {/* Categories List */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto overscroll-x-contain pb-1">
-              <table className="w-full min-w-[760px]">
+              <table className="w-full min-w-190">
                 <thead className="bg-[#F97316] text-white">
                   <tr className="text-left">
                     <th className="px-6 py-3">Name</th>
@@ -338,7 +338,7 @@ const AdminDashboard = ({ section = 'dashboard' }) => {
           
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto overscroll-x-contain pb-1">
-              <table className="w-full min-w-[820px]">
+              <table className="w-full min-w-205">
                 <thead className="bg-[#F97316] text-white">
                   <tr className="text-left">
                     <th className="px-6 py-3">Order ID</th>
@@ -416,7 +416,7 @@ const AdminDashboard = ({ section = 'dashboard' }) => {
           
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto overscroll-x-contain pb-1">
-              <table className="w-full min-w-[860px]">
+              <table className="w-full min-w-215">
                 <thead className="bg-[#F97316] text-white">
                   <tr className="text-left">
                     <th className="px-6 py-3">Product</th>

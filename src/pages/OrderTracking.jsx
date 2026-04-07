@@ -146,7 +146,7 @@ const OrderTracking = () => {
                   <div key={index} className="flex flex-col items-center text-center flex-1">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 ${
                       isCompleted 
-                        ? 'bg-gradient-to-r from-[#F97316] to-[#FB923C] text-white' 
+                        ? 'bg-linear-to-r from-[#F97316] to-[#FB923C] text-white' 
                         : 'bg-gray-200 text-gray-400'
                     } ${isCurrent ? 'ring-4 ring-[#F97316]/30' : ''}`}>
                       {isCompleted ? <FaCheckCircle /> : <Icon />}
@@ -155,7 +155,7 @@ const OrderTracking = () => {
                       <p className={`text-xs font-semibold ${isCompleted ? 'text-[#F97316]' : 'text-gray-400'}`}>
                         {step.label}
                       </p>
-                      <p className="text-xs text-[#6B7280] mt-1 max-w-[80px] hidden sm:block">
+                      <p className="text-xs text-[#6B7280] mt-1 max-w-20 hidden sm:block">
                         {step.description}
                       </p>
                     </div>
@@ -208,7 +208,7 @@ const OrderTracking = () => {
         
         {/* Order Summary */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b">
+          <div className="bg-linear-to-r from-gray-50 to-white px-6 py-4 border-b">
             <h2 className="text-xl font-semibold text-[#111827]">Order Summary</h2>
           </div>
           
@@ -273,7 +273,7 @@ const OrderTracking = () => {
         </div>
         
         {/* AI Intelligence Tip */}
-        <div className="mt-6 bg-gradient-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
+        <div className="mt-6 bg-linear-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
           <div className="flex items-start gap-3">
             <FaBrain className="text-[#FB923C] text-xl mt-0.5" />
             <div>

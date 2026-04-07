@@ -1,7 +1,7 @@
 // src/layouts/AdminLayout.jsx
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { FaTachometerAlt, FaUsers, FaBox, FaShoppingCart, FaTags } from 'react-icons/fa';
+import { FaTachometerAlt, FaUsers, FaBox, FaShoppingCart, FaTags, FaEnvelopeOpenText } from 'react-icons/fa';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -11,7 +11,8 @@ const AdminLayout = () => {
     { path: '/admin/users', label: 'Users', icon: FaUsers },
     { path: '/admin/products', label: 'Products', icon: FaBox },
     { path: '/admin/orders', label: 'Orders', icon: FaShoppingCart },
-    { path: '/admin/categories', label: 'Categories', icon: FaTags }
+    { path: '/admin/categories', label: 'Categories', icon: FaTags },
+    { path: '/admin/contact-queue', label: 'Contact Queue', icon: FaEnvelopeOpenText }
   ];
 
   return (

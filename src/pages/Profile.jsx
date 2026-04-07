@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaStore, FaSave, FaBrain, FaShieldAlt } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaStore, FaSave, FaBrain, FaShieldAlt, FaCrown } from 'react-icons/fa';
 
 const Profile = () => {
-  const { user, token } = useAuth();
+  const { user, token, activePlan, availablePlans, switchPlan } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -76,11 +76,38 @@ const Profile = () => {
           </div>
           <p className="text-[#6B7280]">Lango Lako la Biashara Smart — Manage your account details</p>
         </div>
+
+        {activePlan && (
+          <div className="mb-6 bg-white rounded-xl shadow-md p-5 border border-[#F97316]/20">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2">
+                  <FaCrown className="text-[#F97316]" />
+                  <h3 className="font-semibold text-[#111827]">Current Plan: {activePlan.name}</h3>
+                </div>
+                <p className="text-sm text-[#6B7280] mt-1">
+                  {activePlan.differentiator} • {activePlan.priceLabel}
+                </p>
+              </div>
+              <select
+                value={activePlan.id}
+                onChange={(e) => switchPlan(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-[#111827] bg-white"
+              >
+                {(availablePlans || []).map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
         
         {/* Profile Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {/* Profile Header */}
-          <div className="bg-gradient-to-r from-[#F97316] to-[#FB923C] px-6 py-4">
+          <div className="bg-linear-to-r from-[#F97316] to-[#FB923C] px-6 py-4">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
                 <span className="text-2xl font-bold text-[#F97316]">
@@ -102,7 +129,7 @@ const Profile = () => {
             <div className="space-y-5">
               {/* Full Name */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
+                <label className="text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
                   <FaUser className="text-[#F97316] text-sm" />
                   Full Name
                 </label>
@@ -118,7 +145,7 @@ const Profile = () => {
               
               {/* Email (disabled) */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
+                <label className="text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
                   <FaEnvelope className="text-[#FB923C] text-sm" />
                   Email Address
                 </label>
@@ -134,7 +161,7 @@ const Profile = () => {
               
               {/* Phone Number */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
+                <label className="text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
                   <FaPhone className="text-[#16A34A] text-sm" />
                   Phone Number
                 </label>
@@ -150,7 +177,7 @@ const Profile = () => {
               
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
+                <label className="text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
                   <FaMapMarkerAlt className="text-[#F97316] text-sm" />
                   Address
                 </label>
@@ -167,7 +194,7 @@ const Profile = () => {
               {/* Business Type (for sellers) */}
               {user?.role === 'seller' && (
                 <div className="bg-[#F97316]/5 rounded-lg p-4 border border-[#F97316]/20">
-                  <label className="block text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
+                  <label className="text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
                     <FaStore className="text-[#F97316] text-sm" />
                     Business Type
                   </label>
@@ -208,7 +235,7 @@ const Profile = () => {
         </div>
         
         {/* AI Intelligence Tip */}
-        <div className="mt-6 bg-gradient-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
+        <div className="mt-6 bg-linear-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
           <div className="flex items-start gap-3">
             <FaBrain className="text-[#FB923C] text-xl mt-0.5" />
             <div>

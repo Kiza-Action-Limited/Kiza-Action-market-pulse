@@ -77,7 +77,7 @@ const Cart = () => {
                       {/* Product Info */}
                       <div className="md:col-span-6">
                         <div className="flex gap-4">
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                             <img
                               src={item.image || 'https://via.placeholder.com/100'}
                               alt={item.name}
@@ -211,7 +211,7 @@ const Cart = () => {
             
             {/* AI Intelligence Tip */}
             {cartItems.length > 0 && total < 50 && (
-              <div className="mt-4 bg-gradient-to-r from-[#F97316]/10 to-[#FB923C]/10 rounded-xl p-4 border border-[#F97316]/20">
+            <div className="mt-4 bg-linear-to-r from-[#F97316]/10 to-[#FB923C]/10 rounded-xl p-4 border border-[#F97316]/20">
                 <div className="flex items-start gap-2">
                   <FaBrain className="text-[#F97316] text-lg mt-0.5" />
                   <div>

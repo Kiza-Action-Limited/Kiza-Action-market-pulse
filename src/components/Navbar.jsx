@@ -66,7 +66,7 @@ const Navbar = () => {
                 <img
                   src={marketPulseLogo}
                   alt="Lango Market Pulse"
-                  className="h-9 sm:h-10 md:h-12 w-auto max-w-[160px] sm:max-w-[210px] object-contain"
+                  className="h-9 sm:h-10 md:h-12 w-auto max-w-40 sm:max-w-52.5 object-contain"
                 />
                 <span className="text-[#f3f2f2] font-bold text-base sm:text-lg">Market Pulse</span>
               </Link>
@@ -82,8 +82,9 @@ const Navbar = () => {
               </div>
             </div>
 
+
             {/* Search Bar */}
-            <div className="order-3 w-full md:order-none md:flex-1 md:max-w-3xl md:mx-4 relative">
+            <div className="order-3 w-full md:order-0 md:flex-1 md:max-w-3xl md:mx-4 relative">
               <SearchBar />
             </div>
 
@@ -140,13 +141,22 @@ const Navbar = () => {
                           Wishlist
                         </Link>
                         {isSeller && (
-                          <Link
-                            to="/seller"
-                            className="block px-4 py-2 hover:bg-gray-100"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            Seller Dashboard
-                          </Link>
+                          <>
+                            <Link
+                              to="/seller"
+                              className="block px-4 py-2 hover:bg-gray-100"
+                              onClick={() => setIsUserMenuOpen(false)}
+                            >
+                              Seller Dashboard
+                            </Link>
+                            <Link
+                              to="/seller/subscription-plans"
+                              className="block px-4 py-2 hover:bg-gray-100"
+                              onClick={() => setIsUserMenuOpen(false)}
+                            >
+                              Subscription Plans
+                            </Link>
+                          </>
                         )}
                         {isAdmin && (
                           <Link
@@ -221,10 +231,10 @@ const Navbar = () => {
       {isDepartmentsOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-[70]"
+            className="fixed inset-0 bg-black/50 z-70"
             onClick={() => setIsDepartmentsOpen(false)}
           />
-          <aside className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl border-r z-[80]">
+          <aside className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl border-r z-80">
             <div className="flex justify-between items-center px-4 py-3 border-b">
               <h2 className="text-lg font-bold text-dark">Departments</h2>
               <button
@@ -268,7 +278,10 @@ const Navbar = () => {
                   <Link to="/orders" className="block text-white" onClick={() => setIsMenuOpen(false)}>Orders</Link>
                   <Link to="/wishlist" className="block text-white" onClick={() => setIsMenuOpen(false)}>Wishlist</Link>
                   {isSeller && (
-                    <Link to="/seller" className="block text-white" onClick={() => setIsMenuOpen(false)}>Seller Dashboard</Link>
+                    <>
+                      <Link to="/seller" className="block text-white" onClick={() => setIsMenuOpen(false)}>Seller Dashboard</Link>
+                      <Link to="/seller/subscription-plans" className="block text-white" onClick={() => setIsMenuOpen(false)}>Subscription Plans</Link>
+                    </>
                   )}
                   {isAdmin && (
                     <Link to="/admin" className="block text-white" onClick={() => setIsMenuOpen(false)}>Admin Panel</Link>

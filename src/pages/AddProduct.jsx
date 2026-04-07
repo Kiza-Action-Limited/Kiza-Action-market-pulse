@@ -354,7 +354,7 @@ const AddProduct = () => {
           </div>
           
           {/* AI Intelligence Tip */}
-          <div className="bg-gradient-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
+          <div className="bg-linear-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
             <div className="flex items-start gap-3">
               <FaBrain className="text-[#FB923C] text-xl mt-0.5" />
               <div>

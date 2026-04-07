@@ -218,7 +218,7 @@ const AdminCategories = () => {
               
               return (
                 <div key={category.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className={`h-28 bg-gradient-to-r ${gradient} flex items-center justify-center`}>
+                  <div className={`h-28 bg-linear-to-r ${gradient} flex items-center justify-center`}>
                     <span className="text-5xl">{category.icon || '📦'}</span>
                   </div>
                   <div className="p-5">

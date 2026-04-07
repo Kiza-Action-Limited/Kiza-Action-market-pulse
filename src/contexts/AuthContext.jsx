@@ -3,6 +3,14 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { handleApiError } from '../utils/errorHandler';
 import toast from 'react-hot-toast';
+import {
+  clearStoredPlanOverride,
+  getPlanById,
+  getPlansByTrack,
+  hasFeatureAccess,
+  resolveActivePlan,
+  setStoredPlanOverride,
+} from '../utils/subscription';
 
 const AuthContext = createContext();
 
@@ -18,14 +26,24 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [activePlan, setActivePlan] = useState(null);
 
   useEffect(() => {
     if (token) {
       fetchUser();
     } else {
+      setActivePlan(null);
       setLoading(false);
     }
   }, [token]);
+
+  useEffect(() => {
+    if (!user) {
+      setActivePlan(null);
+      return;
+    }
+    setActivePlan(resolveActivePlan(user));
+  }, [user]);
 
   const fetchUser = async () => {
     try {
@@ -75,12 +93,31 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    setActivePlan(null);
     toast.success('Logged out successfully');
   };
 
   const updateUser = (updatedData) => {
     setUser(prev => ({ ...prev, ...updatedData }));
   };
+
+  const switchPlan = (nextPlanId) => {
+    const nextPlan = getPlanById(nextPlanId);
+    if (!nextPlan || !user) return;
+    setStoredPlanOverride(user, nextPlanId);
+    setActivePlan(nextPlan);
+    toast.success(`Active plan changed to ${nextPlan.name}`);
+  };
+
+  const resetPlanToDefault = () => {
+    if (!user) return;
+    clearStoredPlanOverride(user);
+    const resolved = resolveActivePlan(user);
+    setActivePlan(resolved);
+    toast.success('Plan reset to your default tier');
+  };
+
+  const hasFeature = (featureKey) => hasFeatureAccess(activePlan, featureKey);
 
   const value = {
     user,
@@ -90,6 +127,11 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateUser,
+    activePlan,
+    availablePlans: getPlansByTrack(activePlan?.track),
+    hasFeature,
+    switchPlan,
+    resetPlanToDefault,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
     isSeller: user?.role === 'seller' || user?.role === 'admin',

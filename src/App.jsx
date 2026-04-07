@@ -28,6 +28,12 @@ import Wishlist from './pages/Wishlists';
 import Reviews from './pages/Reviews';
 import About from './pages/About';
 import NotFound from './pages/notFound';
+import SubscriptionPlans from './pages/SubscriptionPlans';
+import FAQ from './pages/FAQ';
+import ShippingInfo from './pages/ShippingInfo';
+import Returns from './pages/Returns';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contact';
 
 // Seller Pages
 import SellerDashboard from './pages/SellerDashboard';
@@ -41,11 +47,14 @@ import AdminUsers from './pages/AdminUsers';
 import AdminCategories from './pages/AdminCategories';
 import AdminOrders from './pages/AdminOrders';
 import AdminProducts from './pages/AdminProducts';
+import AdminContactQueue from './pages/AdminContactQueue';
 
 // Protected Routes
 import ProtectedRoute from './components/ProtectedRoute';
 import SellerRoute from './components/SellerRoute';
 import AdminRoute from './components/AdminRoute';
+import SubscriptionGate from './components/SubscriptionGate';
+import { SUBSCRIPTION_FEATURES } from './config/subscriptionPlans';
 
 function App() {
   return (
@@ -66,6 +75,11 @@ function App() {
                   <Route path="products/:id" element={<ProductDetail />} />
                   <Route path="categories" element={<Categories />} />
                   <Route path="about" element={<About />} />
+                  <Route path="contact" element={<Contact />} />
+                  <Route path="faq" element={<FAQ />} />
+                  <Route path="shipping" element={<ShippingInfo />} />
+                  <Route path="returns" element={<Returns />} />
+                  <Route path="privacy" element={<PrivacyPolicy />} />
                   <Route path="cart" element={<Cart />} />
                   <Route path="products/:id/reviews" element={<Reviews />} />
                   
@@ -83,9 +97,18 @@ function App() {
                   <Route element={<SellerRoute />}>
                     <Route path="seller" element={<SellerLayout />}>
                       <Route index element={<SellerDashboard />} />
-                      <Route path="add-product" element={<AddProduct />} />
-                      <Route path="edit-product/:id" element={<EditProduct />} />
-                      <Route path="orders" element={<SellerOrders />} />
+                      <Route path="subscription-plans" element={<SubscriptionPlans />} />
+                      <Route
+                        element={<SubscriptionGate requiredFeatures={[SUBSCRIPTION_FEATURES.INVENTORY_LEDGER]} />}
+                      >
+                        <Route path="add-product" element={<AddProduct />} />
+                        <Route path="edit-product/:id" element={<EditProduct />} />
+                      </Route>
+                      <Route
+                        element={<SubscriptionGate requiredFeatures={[SUBSCRIPTION_FEATURES.ESCROW_CLIENT]} />}
+                      >
+                        <Route path="orders" element={<SellerOrders />} />
+                      </Route>
                     </Route>
                   </Route>
                   
@@ -97,6 +120,7 @@ function App() {
                       <Route path="categories" element={<AdminCategories />} />
                       <Route path="orders" element={<AdminOrders />} />
                       <Route path="products" element={<AdminProducts />} />
+                      <Route path="contact-queue" element={<AdminContactQueue />} />
                     </Route>
                   </Route>
                   

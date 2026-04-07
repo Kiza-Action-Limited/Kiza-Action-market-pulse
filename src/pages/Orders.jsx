@@ -192,7 +192,7 @@ const Orders = () => {
 
         {/* AI Intelligence Tip */}
         {orderStats.pending > 0 && (
-          <div className="mb-6 bg-gradient-to-r from-[#F97316]/10 to-[#FB923C]/10 rounded-xl p-4 border border-[#F97316]/20">
+        <div className="mb-6 bg-linear-to-r from-[#F97316]/10 to-[#FB923C]/10 rounded-xl p-4 border border-[#F97316]/20">
             <div className="flex items-start gap-3">
               <FaBrain className="text-[#F97316] text-xl mt-0.5" />
               <div>
@@ -203,14 +203,14 @@ const Orders = () => {
                 </p>
               </div>
             </div>
-          </div>
+        </div>
         )}
       
         {/* Orders List */}
         <div className="space-y-4">
           {filteredOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b flex flex-wrap justify-between items-center">
+              <div className="bg-linear-to-r from-gray-50 to-white px-6 py-4 border-b flex flex-wrap justify-between items-center">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <FaBox className="text-[#FB923C]" />

@@ -29,7 +29,7 @@ const MainLayout = () => {
       ) : (
         <Navbar />
       )}
-      <main className="flex-grow bg-gray-50">
+      <main className="grow bg-gray-50">
         <Outlet />
       </main>
       {!isAuthPage && <Footer />}

@@ -360,7 +360,7 @@ const Checkout = () => {
             
             {/* AI Intelligence Tip */}
             {subtotal < 50 && (
-              <div className="mt-4 bg-gradient-to-r from-[#F97316]/10 to-[#FB923C]/10 rounded-xl p-4 border border-[#F97316]/20">
+             <div className="mt-4 bg-linear-to-r from-[#F97316]/10 to-[#FB923C]/10 rounded-xl p-4 border border-[#F97316]/20">
                 <div className="flex items-start gap-2">
                   <FaBrain className="text-[#F97316] text-lg mt-0.5" />
                   <div>

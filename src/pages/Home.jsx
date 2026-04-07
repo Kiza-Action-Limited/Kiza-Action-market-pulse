@@ -124,7 +124,7 @@ const Home = () => {
               }`}
             />
           ))}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#F97316]/40 via-[#FB923C]/30 to-[#F97316]/40" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#F97316]/40 via-[#FB923C]/30 to-[#F97316]/40" />
         </div>
 
         <div className="relative container mx-auto px-4 py-10 md:py-12">
@@ -162,7 +162,7 @@ const Home = () => {
       </section>
 
       {/* Lango MarketPulse Intelligence Banner */}
-      <section className="py-8 bg-gradient-to-r from-[#F97316] to-[#FB923C]">
+      <section className="py-8 bg-linear-to-r from-[#F97316] to-[#FB923C]">
         <div className="container mx-auto px-4 text-center">
           <p className="text-white/90 text-sm md:text-base font-medium">
             ⚡ <span className="font-bold">Lango MarketPulse Trade & Intelligence OS</span> — 
@@ -191,7 +191,7 @@ const Home = () => {
       </section>
 
       {/* AI Intelligence Section */}
-      <section className="py-16 bg-gradient-to-br from-[#FB923C]/5 to-[#F97316]/5">
+      <section className="py-16 bg-linear-to-br from-[#FB923C]/5 to-[#F97316]/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
             <div className="inline-block px-4 py-1 bg-[#FB923C]/10 rounded-full mb-3">
@@ -282,7 +282,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-[#F97316] to-[#FB923C]">
+       <section className="py-16 bg-linear-to-r from-[#F97316] to-[#FB923C]">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-3">Ready to Start Your Journey?</h2>
           <p className="text-white/90 mb-6 max-w-2xl mx-auto">

@@ -14,7 +14,7 @@ const Footer = () => {
             <img
               src={marketPulseLogo}
               alt="Lango Market Pulse"
-              className="h-12 sm:h-14 w-auto max-w-[220px] object-contain mb-4"
+              className="h-12 sm:h-14 w-auto max-w-55 object-contain mb-4"
             />
             <p className="text-gray-400">
               Connect with brands, wholesalers, manufacturers, retailers, farmers, and small businesses all in one place.

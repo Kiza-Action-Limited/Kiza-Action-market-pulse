@@ -70,13 +70,13 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-[#F9FAFB] to-[#E5E7EB] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-linear-to-br from-[#F9FAFB] to-[#E5E7EB] py-8 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 border border-[#F97316]/15">
           <img
             src={marketPulseLogo}
             alt="Lango Market Pulse"
-            className="w-full h-auto max-h-[420px] object-contain mx-auto"
+            className="w-full h-auto max-h-105 object-contain mx-auto"
           />
           <p className="mt-4 text-sm text-[#6B7280] text-center">
             Join the platform built for smart commerce and trusted growth.
@@ -234,7 +234,7 @@ const Register = () => {
               )}
             </div>
 
-            <div className="p-3 bg-gradient-to-r from-[#FB923C]/5 to-[#F97316]/5 rounded-lg border border-[#FB923C]/20">
+            <div className="p-3 bg-linear-to-r from-[#FB923C]/5 to-[#F97316]/5 rounded-lg border border-[#FB923C]/20">
               <div className="flex items-center gap-2 mb-1">
                 <FaBrain className="text-[#FB923C] text-xs" />
                 <span className="text-xs font-semibold text-[#FB923C] uppercase tracking-wide">AI Powered Platform</span>

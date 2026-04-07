@@ -150,7 +150,7 @@ const AdminProducts = () => {
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
           <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-50">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280]" />
                 <input
@@ -180,7 +180,7 @@ const AdminProducts = () => {
         
         {/* AI Intelligence Tip */}
         {stats.inactive > stats.active * 0.5 && (
-          <div className="mb-6 bg-gradient-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
+          <div className="mb-6 bg-linear-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
             <div className="flex items-start gap-3">
               <FaChartLine className="text-[#FB923C] text-xl mt-0.5" />
               <div>
@@ -206,7 +206,7 @@ const AdminProducts = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
               <div key={product.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 duration-300">
-                <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                <div className="h-48 bg-linear-to-br from-gray-100 to-gray-200 relative">
                   {product.images?.[0] ? (
                     <img
                       src={product.images[0]}

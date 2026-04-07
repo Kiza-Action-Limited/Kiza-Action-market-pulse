@@ -1,7 +1,7 @@
 // src/layouts/SellerLayout.jsx
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { FaTachometerAlt, FaPlus, FaBox, FaShoppingCart, FaChartLine } from 'react-icons/fa';
+import { FaTachometerAlt, FaPlus, FaBox, FaShoppingCart, FaCrown } from 'react-icons/fa';
 
 const SellerLayout = () => {
   const location = useLocation();
@@ -11,6 +11,7 @@ const SellerLayout = () => {
     { path: '/seller/add-product', label: 'Add Product', icon: FaPlus },
     { path: '/seller/products', label: 'My Products', icon: FaBox },
     { path: '/seller/orders', label: 'Orders', icon: FaShoppingCart },
+    { path: '/subscription-plans', label: 'Subscription', icon: FaCrown },
   ];
 
   return (

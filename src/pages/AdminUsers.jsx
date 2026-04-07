@@ -168,7 +168,7 @@ const AdminUsers = () => {
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
           <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-50">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280]" />
                 <input
@@ -201,7 +201,7 @@ const AdminUsers = () => {
         
         {/* AI Intelligence Tip */}
         {stats.blocked > 0 && (
-          <div className="mb-6 bg-gradient-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
+          <div className="mb-6 bg-linear-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
             <div className="flex items-start gap-3">
               <FaBrain className="text-[#FB923C] text-xl mt-0.5" />
               <div>
@@ -217,7 +217,7 @@ const AdminUsers = () => {
         {/* Users Table */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="overflow-x-auto overscroll-x-contain pb-1">
-            <table className="w-full min-w-[920px]">
+            <table className="w-full min-w-230">
               <thead className="bg-[#F97316] text-white">
                 <tr className="text-left">
                   <th className="px-6 py-3">User</th>
@@ -234,7 +234,7 @@ const AdminUsers = () => {
                   <tr key={user.id} className={`border-t border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#F97316] to-[#FB923C] rounded-full flex items-center justify-center text-white font-bold shadow-sm">
+                        <div className="w-10 h-10 bg-linear-to-br from-[#F97316] to-[#FB923C] rounded-full flex items-center justify-center text-white font-bold shadow-sm">
                           {user.name?.charAt(0).toUpperCase()}
                         </div>
                         <span className="font-medium text-[#111827]">{user.name}</span>

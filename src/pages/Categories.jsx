@@ -74,7 +74,7 @@ const Categories = () => {
                   to={`/products?category=${category.id}`}
                   className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
-                  <div className={`h-40 bg-gradient-to-r ${gradient} flex items-center justify-center relative overflow-hidden`}>
+                  <div className={`h-40 bg-linear-to-r ${gradient} flex items-center justify-center relative overflow-hidden`}>
                     <span className="text-7xl transform group-hover:scale-110 transition-transform duration-300">
                       {category.icon || '📦'}
                     </span>
@@ -104,7 +104,7 @@ const Categories = () => {
         
         {/* Featured Business Types Section */}
         {categories.length > 0 && (
-          <div className="mt-12 bg-gradient-to-r from-[#F97316]/5 to-[#FB923C]/5 rounded-xl p-6">
+          <div className="mt-12 bg-linear-to-r from-[#F97316]/5 to-[#FB923C]/5 rounded-xl p-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <FaStore className="text-[#F97316] text-2xl" />
@@ -125,7 +125,7 @@ const Categories = () => {
         
         {/* AI Intelligence Tip */}
         {categories.length > 3 && (
-          <div className="mt-8 bg-gradient-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
+           <div className="mt-8 bg-linear-to-r from-[#FB923C]/10 to-[#F97316]/10 rounded-xl p-4 border border-[#FB923C]/20">
             <div className="flex items-start gap-3">
               <FaBrain className="text-[#FB923C] text-xl mt-0.5" />
               <div>
