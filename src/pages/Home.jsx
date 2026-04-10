@@ -214,6 +214,41 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Verified business sourcing entry */}
+      <section className="py-14 bg-[#F3F4F6]">
+        <div className="container mx-auto px-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8">
+            <div className="flex flex-col lg:flex-row justify-between gap-6">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold text-[#F97316] mb-2">Factory Sourcing Experience</p>
+                <h2 className="text-2xl md:text-3xl font-bold text-[#111827] mb-3">
+                  Browse verified businesses on Lango Market Pulse
+                </h2>
+                <p className="text-[#6B7280]">
+                  Source by category, compare business capabilities, and request quotations using your existing Lango Market Pulse
+                  product and category data.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {categories.slice(0, 5).map((category) => (
+                    <span key={category.id} className="px-3 py-1 rounded-full bg-gray-100 text-sm text-[#374151]">
+                      {category.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center">
+                <Link
+                  to="/business"
+                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-linear-to-r from-[#F97316] to-[#FB923C] text-white font-semibold shadow-lg hover:opacity-95"
+                >
+                  Explore Verified Businesses
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Categories with updated styling */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">

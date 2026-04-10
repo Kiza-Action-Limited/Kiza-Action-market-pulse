@@ -53,7 +53,7 @@ const SubscriptionGate = ({ requiredFeatures = [], requireAny = false, children 
           <ul className="space-y-2">
             {missingFeatures.map((featureKey) => (
               <li key={featureKey} className="text-sm text-[#374151]">
-                • {FEATURE_LABELS[featureKey] || featureKey}
+                - {FEATURE_LABELS[featureKey] || featureKey}
               </li>
             ))}
           </ul>
@@ -61,7 +61,7 @@ const SubscriptionGate = ({ requiredFeatures = [], requireAny = false, children 
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            to="/subscription-plans"
+            to="/seller/subscription-plans"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#F97316] text-white rounded-lg hover:bg-[#EA580C] transition"
           >
             <FaCrown />

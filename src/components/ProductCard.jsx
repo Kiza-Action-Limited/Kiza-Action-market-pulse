@@ -1,7 +1,7 @@
 // src/components/ProductCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaStar, FaShoppingCart } from 'react-icons/fa';
+import { FaShoppingCart } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/formatters';
 
@@ -33,37 +33,21 @@ const ProductCard = ({ product }) => {
       
       <div className="p-4">
         <Link to={`/products/${product.id}`}>
-          <h3 className="text-lg font-semibold text-dark hover:text-primary mb-2">
+          <h3 className="text-lg font-semibold text-dark hover:text-primary mb-1 line-clamp-2">
             {product.name}
           </h3>
         </Link>
-        
-        <div className="flex items-center mb-2">
-          <div className="flex text-yellow-400">
-            {[...Array(5)].map((_, i) => (
-              <FaStar
-                key={i}
-                className={i < Math.floor(product.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}
-                size={14}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-gray-500 ml-2">({product.reviews?.length || 0})</span>
+
+        <div className="text-sm text-gray-500 mb-1">({product.reviews?.length || 0})</div>
+
+        <div className="mb-1">
+          <span className="text-2xl font-bold text-primary">{formatCurrency(product.price)}</span>
+          {product.originalPrice && (
+            <span className="text-sm text-gray-400 line-through ml-1">{formatCurrency(product.originalPrice)}</span>
+          )}
         </div>
-        
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <span className="text-2xl font-bold text-primary">
-              {formatCurrency(product.price)}
-            </span>
-            {product.originalPrice && (
-              <span className="text-sm text-gray-400 line-through ml-2">
-                {formatCurrency(product.originalPrice)}
-              </span>
-            )}
-          </div>
-          <span className="text-xs text-gray-500">{product.seller?.businessType}</span>
-        </div>
+
+        <div className="text-xs text-gray-500 mb-3 lowercase">{product.seller?.businessType}</div>
         
         {product.stock > 0 ? (
           <button

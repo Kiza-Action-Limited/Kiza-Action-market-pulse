@@ -82,6 +82,10 @@ const Navbar = () => {
               </div>
             </div>
 
+            <Link to="/business" className="hidden md:block text-sm font-semibold hover:opacity-80">
+              Businesses
+            </Link>
+
 
             {/* Search Bar */}
             <div className="order-3 w-full md:order-0 md:flex-1 md:max-w-3xl md:mx-4 relative">
@@ -268,6 +272,9 @@ const Navbar = () => {
               </Link>
               <Link to="/categories" className="block text-white" onClick={() => setIsMenuOpen(false)}>
                 Categories
+              </Link>
+              <Link to="/business" className="block text-white" onClick={() => setIsMenuOpen(false)}>
+                Businesses
               </Link>
               <Link to="/cart" className="block text-white" onClick={() => setIsMenuOpen(false)}>
                 Cart ({cartCount})

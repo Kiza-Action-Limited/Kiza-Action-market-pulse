@@ -109,7 +109,7 @@ const SellerDashboard = () => {
           </Link>
         ) : (
           <Link
-            to="/subscription-plans"
+            to="/seller/subscription-plans"
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition flex items-center space-x-2"
           >
             <FaLock />
@@ -124,7 +124,7 @@ const SellerDashboard = () => {
             <FaBrain className="text-[#F97316]" />
             <h2 className="text-xl font-semibold">Operational Intelligence</h2>
           </div>
-          <Link to="/subscription-plans" className="text-sm text-primary hover:underline">
+          <Link to="/seller/subscription-plans" className="text-sm text-primary hover:underline">
             View All Plans
           </Link>
         </div>

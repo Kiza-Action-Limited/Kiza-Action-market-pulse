@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FaCheckCircle, FaChevronDown, FaChevronUp, FaCrown, FaLock, FaSyncAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { FEATURE_LABELS, MIZIGO_PLANS, TRADER_PLANS } from '../config/subscriptionPlans';
+import { hasPremiumVerification } from '../utils/premiumSellerProfile';
 
 const PlanCard = ({ plan, isActive, onActivate, featureLimit, isExpanded, onToggleExpand, isHighlighted }) => (
   <div
@@ -53,7 +54,7 @@ const PlanCard = ({ plan, isActive, onActivate, featureLimit, isExpanded, onTogg
 
     <button
       type="button"
-      onClick={() => onActivate(plan.id)}
+      onClick={onActivate}
       disabled={isActive}
       className={`w-full mt-5 px-4 py-2 rounded-lg font-medium transition ${
         isActive
@@ -67,7 +68,8 @@ const PlanCard = ({ plan, isActive, onActivate, featureLimit, isExpanded, onTogg
 );
 
 const SubscriptionPlans = () => {
-  const { activePlan, switchPlan, resetPlanToDefault } = useAuth();
+  const { activePlan, switchPlan, resetPlanToDefault, user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedPlanId = searchParams.get('plan');
   const [expandedPlanId, setExpandedPlanId] = useState(null);
@@ -99,6 +101,21 @@ const SubscriptionPlans = () => {
 
   const handleToggleExpand = (planId) => {
     setExpandedPlanId((prev) => (prev === planId ? null : planId));
+  };
+
+  const handleActivatePlan = (plan) => {
+    const isPremiumPlan = !plan.id.endsWith('_solo');
+    if (!isPremiumPlan) {
+      switchPlan(plan.id);
+      return;
+    }
+
+    if (!hasPremiumVerification(user)) {
+      navigate(`/seller/premium-verification?plan=${encodeURIComponent(plan.id)}`);
+      return;
+    }
+
+    navigate(`/seller/premium-payment?plan=${encodeURIComponent(plan.id)}`);
   };
 
   return (
@@ -136,7 +153,7 @@ const SubscriptionPlans = () => {
                 key={plan.id}
                 plan={plan}
                 isActive={activePlan?.id === plan.id}
-                onActivate={switchPlan}
+                onActivate={() => handleActivatePlan(plan)}
                 featureLimit={6}
                 isExpanded={expandedPlanId === plan.id}
                 onToggleExpand={handleToggleExpand}
@@ -154,7 +171,7 @@ const SubscriptionPlans = () => {
                 key={plan.id}
                 plan={plan}
                 isActive={activePlan?.id === plan.id}
-                onActivate={switchPlan}
+                onActivate={() => handleActivatePlan(plan)}
                 featureLimit={6}
                 isExpanded={expandedPlanId === plan.id}
                 onToggleExpand={handleToggleExpand}

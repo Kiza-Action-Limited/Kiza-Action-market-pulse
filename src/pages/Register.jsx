@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaUser, FaEnvelope, FaLock, FaStore, FaBrain, FaArrowRight } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaStore, FaBrain, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import marketPulseLogo from '../assets/Marketpulse-logo.png';
 
 const Register = () => {
@@ -16,10 +16,20 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const businessTypes = ['Brand', 'Wholesaler', 'Manufacturer', 'Retailer', 'Farmer', 'Small Business'];
+
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'seller') {
+      setFormData((prev) => ({ ...prev, role: 'seller' }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     setFormData({
@@ -62,7 +72,16 @@ const Register = () => {
     const { confirmPassword, ...registerData } = formData;
     const result = await register(registerData);
     if (result.success) {
-      navigate('/');
+      const requestedPlan = searchParams.get('plan');
+      if (registerData.role === 'seller') {
+        navigate(
+          requestedPlan
+            ? `/seller/subscription-plans?plan=${encodeURIComponent(requestedPlan)}`
+            : '/seller/subscription-plans'
+        );
+      } else {
+        navigate('/');
+      }
     } else {
       setError(result.error);
     }
@@ -127,18 +146,26 @@ const Register = () => {
               <div className="relative">
                 <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] text-sm" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   required
                   value={formData.password}
                   onChange={handleChange}
                   onFocus={() => setShowPasswordStrength(true)}
                   onBlur={() => setShowPasswordStrength(false)}
-                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent text-[#111827] placeholder:text-[#6B7280]"
+                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent text-[#111827] placeholder:text-[#6B7280]"
                   placeholder="Password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] hover:text-[#F97316]"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                </button>
                 {showPasswordStrength && formData.password && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
                     <span className={`text-xs font-medium ${passwordStrength.color}`}>
                       {passwordStrength.label}
                     </span>
@@ -173,14 +200,22 @@ const Register = () => {
               <div className="relative">
                 <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] text-sm" />
                 <input
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent text-[#111827] placeholder:text-[#6B7280]"
+                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent text-[#111827] placeholder:text-[#6B7280]"
                   placeholder="Confirm Password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] hover:text-[#F97316]"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                </button>
               </div>
 
               {formData.confirmPassword && formData.password !== formData.confirmPassword && (

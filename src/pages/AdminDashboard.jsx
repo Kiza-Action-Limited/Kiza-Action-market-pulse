@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { FaUsers, FaBox, FaShoppingCart, FaDollarSign, FaBan, FaCheckCircle, FaBrain, FaChartLine, FaBell, FaTag, FaStore, FaTruck } from 'react-icons/fa';
 import { formatCurrency } from '../utils/formatters';
+import { disableMockData, enableMockData, isMockDataEnabled } from '../utils/mockDataControl';
 
 const AdminDashboard = ({ section = 'dashboard' }) => {
   const { token } = useAuth();
@@ -20,6 +21,7 @@ const AdminDashboard = ({ section = 'dashboard' }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [mockEnabled, setMockEnabled] = useState(isMockDataEnabled());
 
   useEffect(() => {
     fetchData();
@@ -169,6 +171,38 @@ const AdminDashboard = ({ section = 'dashboard' }) => {
                 <p className="text-white/80 text-sm">Conversion Rate</p>
                 <p className="text-2xl font-bold">24.8%</p>
               </div>
+            </div>
+          </div>
+
+          <div className="mt-6 bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-[#111827] mb-2">B2B Mock Network Data</h3>
+            <p className="text-sm text-[#6B7280] mb-4">
+              Use this only while real business/supplier data is still growing. Admin can disable it when production data is sufficient.
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className={`text-xs px-2 py-1 rounded-full ${mockEnabled ? 'bg-[#16A34A]/10 text-[#16A34A]' : 'bg-gray-200 text-gray-700'}`}>
+                {mockEnabled ? 'Mock Data Enabled' : 'Mock Data Disabled'}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  enableMockData();
+                  setMockEnabled(true);
+                }}
+                className="px-4 py-2 rounded-lg border border-[#16A34A] text-[#16A34A] text-sm font-medium hover:bg-[#16A34A]/10"
+              >
+                Enable Mock Data
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  disableMockData();
+                  setMockEnabled(false);
+                }}
+                className="px-4 py-2 rounded-lg border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/10"
+              >
+                Disable Mock Data
+              </button>
             </div>
           </div>
         </div>

@@ -16,6 +16,7 @@ import SellerLayout from './layouts/SellerLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
@@ -34,12 +35,17 @@ import ShippingInfo from './pages/ShippingInfo';
 import Returns from './pages/Returns';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contact from './pages/Contact';
+import Business from './pages/Business';
+import BusinessDirectory from './pages/BusinessDirectory';
+import BusinessProfile from './pages/BusinessProfile';
 
 // Seller Pages
 import SellerDashboard from './pages/SellerDashboard';
 import AddProduct from './pages/AddProduct';
 import EditProduct from './pages/EditProduct';
 import SellerOrders from './pages/SellerOrders';
+import SellerPremiumVerification from './pages/SellerPremiumVerification';
+import SellerPremiumPayment from './pages/SellerPremiumPayment';
 
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
@@ -71,7 +77,12 @@ function App() {
                   <Route index element={<Home />} />
                   <Route path="login" element={<Login />} />
                   <Route path="register" element={<Register />} />
+                  <Route path="forgot-password" element={<ForgotPassword />} />
                   <Route path="products" element={<Products />} />
+                  <Route path="business" element={<Business />} />
+                  <Route path="manufacturers" element={<Navigate to="/business" replace />} />
+                  <Route path="businesses" element={<BusinessDirectory />} />
+                  <Route path="businesses/:businessId" element={<BusinessProfile />} />
                   <Route path="products/:id" element={<ProductDetail />} />
                   <Route path="categories" element={<Categories />} />
                   <Route path="about" element={<About />} />
@@ -98,6 +109,8 @@ function App() {
                     <Route path="seller" element={<SellerLayout />}>
                       <Route index element={<SellerDashboard />} />
                       <Route path="subscription-plans" element={<SubscriptionPlans />} />
+                      <Route path="premium-verification" element={<SellerPremiumVerification />} />
+                      <Route path="premium-payment" element={<SellerPremiumPayment />} />
                       <Route
                         element={<SubscriptionGate requiredFeatures={[SUBSCRIPTION_FEATURES.INVENTORY_LEDGER]} />}
                       >

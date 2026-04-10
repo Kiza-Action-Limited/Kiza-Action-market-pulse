@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaClock } from 'react-icons/fa';
 import api from '../config/axios';
 
@@ -43,6 +44,9 @@ const queueOfflineContact = (payload) => {
 
 const Contact = () => {
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [searchParams] = useSearchParams();
+  const initialType = searchParams.get('type') || '';
+  const initialSubject = searchParams.get('subject') || '';
 
   const {
     register,
@@ -57,8 +61,8 @@ const Contact = () => {
       fullName: '',
       email: '',
       phone: '',
-      inquiryType: '',
-      subject: '',
+      inquiryType: initialType,
+      subject: initialSubject,
       message: '',
       consent: false,
     },

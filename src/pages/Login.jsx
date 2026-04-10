@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaEnvelope, FaLock, FaBrain, FaArrowRight } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaBrain, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import marketPulseLogo from '../assets/Marketpulse-logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -58,13 +59,21 @@ const Login = () => {
               <div className="relative">
                 <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] text-sm" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-[#6B7280] text-[#111827] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent sm:text-sm"
+                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-[#6B7280] text-[#111827] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent sm:text-sm"
                   placeholder="Password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#F97316]"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                </button>
               </div>
             </div>
 
