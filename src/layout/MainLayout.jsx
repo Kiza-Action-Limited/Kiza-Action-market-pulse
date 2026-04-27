@@ -3,7 +3,6 @@ import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import marketPulseLogo from '../assets/Marketpulse-logo.png';
 
 const MainLayout = () => {
   const location = useLocation();
@@ -12,16 +11,11 @@ const MainLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {isAuthPage ? (
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <nav className="bg-[#F2871A] text-white sticky top-0 z-40 shadow-sm">
           <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
-            <div className="h-16 sm:h-18 flex items-center">
-              <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition" aria-label="MarketPulse Home">
-                <img
-                  src={marketPulseLogo}
-                  alt="Lango Market Pulse"
-                  className="h-9 sm:h-10 w-auto object-contain"
-                />
-                <span className="text-[#F97316] font-bold text-base sm:text-lg">Lango Market Pulse</span>
+            <div className="h-14 sm:h-16 flex items-center">
+              <Link to="/" className="hover:opacity-90 transition font-extrabold text-base sm:text-lg" aria-label="MarketPulse Home">
+                Lango Market Pulse
               </Link>
             </div>
           </div>
@@ -29,7 +23,7 @@ const MainLayout = () => {
       ) : (
         <Navbar />
       )}
-      <main className="grow bg-gray-50">
+      <main className={`grow bg-gray-50 ${isAuthPage ? '' : 'pt-24 md:pt-26'}`}>
         <Outlet />
       </main>
       {!isAuthPage && <Footer />}

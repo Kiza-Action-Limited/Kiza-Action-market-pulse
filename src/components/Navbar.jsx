@@ -1,311 +1,277 @@
-// src/components/Navbar.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { useNotifications } from '../context/NotificationContext';
-import { 
-  FaShoppingCart, 
-  FaUser, 
-  FaBell, 
-  FaBars, 
-  FaTimes, 
-  FaMapMarkerAlt,
-  FaChevronDown
-} from 'react-icons/fa';
-import SearchBar from './SearchBar';
-import DepartmentsMenu from './DepartmentMenu';
-import marketPulseLogo from '../assets/Marketpulse-logo.png';
+import { FaBars, FaChevronDown, FaSearch, FaShoppingCart, FaTimes, FaUser } from 'react-icons/fa';
+
+const categoryOptions = [
+  { label: 'All Categories', to: '/products' },
+  { label: 'Electronics', to: '/products?category=electronics' },
+  { label: 'Fashion', to: '/products?category=fashion' },
+  { label: 'Home and Garden', to: '/products?category=home-garden' },
+  { label: 'Beauty and Health', to: '/products?category=beauty-health' },
+  { label: 'Sports and Outdoor', to: '/products?category=sports-outdoor' },
+];
+
+const currencyOptions = [
+  { code: 'KES', label: 'KSh KES' },
+  { code: 'USD', label: '$ USD' },
+  { code: 'EUR', label: 'EUR' },
+];
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout, isAdmin, isSeller } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const { getCartCount } = useCart();
-  const { unreadCount } = useNotifications();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isDepartmentsOpen, setIsDepartmentsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [currency, setCurrency] = useState(currencyOptions[0]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
+  const menuRef = useRef(null);
 
   const cartCount = getCartCount();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    setIsUserMenuOpen(false);
-  };
-
-  // Close menus on click outside
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (isUserMenuOpen && !e.target.closest('.user-menu')) {
-        setIsUserMenuOpen(false);
+    const onClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenDropdown(null);
       }
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [isUserMenuOpen]);
+
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  const toggleDropdown = (name) => {
+    setOpenDropdown((prev) => (prev === name ? null : name));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    navigate(`/products?search=${encodeURIComponent(trimmed)}`);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleAuthAction = () => {
+    if (isAuthenticated) {
+      logout();
+      navigate('/');
+      return;
+    }
+    navigate('/login');
+  };
+
+  const closeAllMenus = () => {
+    setIsMobileMenuOpen(false);
+    setOpenDropdown(null);
+  };
 
   return (
-    <>
-      {/* Main Navbar - Amazon style */}
-      <nav className="bg-primary text-white sticky top-0 z-50">
-        <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between py-3 md:py-4 flex-wrap md:flex-nowrap gap-2 sm:gap-3">
-            <div className="flex items-center gap-3 shrink-0">
-                  {/* Departments sidebar toggle beside logo */}
+    <header ref={menuRef} className="fixed top-0 inset-x-0 z-50 w-full shadow-sm">
+      <div className="bg-[#F2871A] text-white">
+        <div className="mx-auto max-w-[1366px] px-3 py-2 flex flex-wrap md:flex-nowrap items-center gap-3 text-sm">
+          <Link to="/" className="flex items-center gap-2 min-w-max hover:opacity-90" onClick={closeAllMenus}>
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#0B2D55] border-2 border-[#06182f]" />
+            <span className="font-extrabold text-sm sm:text-lg leading-none tracking-wide bg-[#0B2D55] px-2 py-1 rounded-sm">
+              LANGO <span className="text-[#F9B233]">MARKET PULSE</span>
+            </span>
+          </Link>
+
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 ml-auto flex-wrap lg:flex-nowrap">
+            <div className="relative">
               <button
-                onClick={() => setIsDepartmentsOpen(true)}
-                className="bg-primary-dark text-white px-4 py-2.5 rounded-md hover:opacity-90 flex items-center gap-2 text-base"
-                aria-label="Open departments sidebar"
+                onClick={() => toggleDropdown('account')}
+                className="bg-[#E97A12] px-3 py-2 rounded flex items-center gap-2 font-semibold"
               >
-                <FaBars size={16} />
-                <span className="hidden sm:inline">All</span>
+                <FaUser />
+                <span className="max-w-28 truncate">{isAuthenticated ? user?.name || 'My Account' : 'My Account'}</span>
+                <FaChevronDown size={12} />
               </button>
-              {/* Logo */}
-              <Link to="/" className="flex items-center hover:opacity-90 transition" aria-label="MarketPulse Home">
-                <img
-                  src={marketPulseLogo}
-                  alt="Lango Market Pulse"
-                  className="h-9 sm:h-10 md:h-12 w-auto max-w-40 sm:max-w-52.5 object-contain"
-                />
-                <span className="text-[#f3f2f2] font-bold text-base sm:text-lg">Market Pulse</span>
-              </Link>
 
-            
-            </div>
-
-            {/* Delivery Location */}
-            <div className="hidden md:flex items-center text-base mr-4 hover:opacity-80 cursor-pointer">
-              <FaMapMarkerAlt className="mr-1" />
-              <div>
-                <div className="font-semibold text-base">Kenya</div>
-              </div>
-            </div>
-
-            <Link to="/business" className="hidden md:block text-sm font-semibold hover:opacity-80">
-              Businesses
-            </Link>
-
-
-            {/* Search Bar */}
-            <div className="order-3 w-full md:order-0 md:flex-1 md:max-w-3xl md:mx-4 relative">
-              <SearchBar />
-            </div>
-
-            {/* Right side: Account, Orders, Cart */}
-            <div className="ml-auto flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
-              {/* Notifications */}
-              <div className="relative hidden sm:block">
-                <button
-                  className="relative hover:text-primary-light transition"
-                >
-                  <FaBell size={24} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-              </div>
-
-              {/* Account & Lists */}
-              <div className="relative user-menu hidden sm:block">
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex flex-col items-start text-sm md:text-base hover:opacity-80"
-                >
-                  <span className="text-xs md:text-sm">Hello, {user?.name || 'sign in'}</span>
-                  <span className="font-semibold flex items-center gap-1">
-                    Account & Lists <FaChevronDown size={12} />
-                  </span>
-                </button>
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white text-dark rounded-lg shadow-lg py-2 z-20">
-                    {isAuthenticated ? (
-                      <>
-                        <Link
-                          to="/profile"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Profile
-                        </Link>
-                        <Link
-                          to="/orders"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          My Orders
-                        </Link>
-                        <Link
-                          to="/wishlist"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Wishlist
-                        </Link>
-                        {isSeller && (
-                          <>
-                            <Link
-                              to="/seller"
-                              className="block px-4 py-2 hover:bg-gray-100"
-                              onClick={() => setIsUserMenuOpen(false)}
-                            >
-                              Seller Dashboard
-                            </Link>
-                            <Link
-                              to="/seller/subscription-plans"
-                              className="block px-4 py-2 hover:bg-gray-100"
-                              onClick={() => setIsUserMenuOpen(false)}
-                            >
-                              Subscription Plans
-                            </Link>
-                          </>
-                        )}
-                        {isAdmin && (
-                          <Link
-                            to="/admin"
-                            className="block px-4 py-2 hover:bg-gray-100"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            Admin Panel
-                          </Link>
-                        )}
-                        <hr className="my-1" />
-                        <button
-                          onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        >
-                          Sign Out
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <Link
-                          to="/login"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Sign in
-                        </Link>
-                        <Link
-                          to="/register"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          New customer? Start here.
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Returns & Orders */}
-              <Link to="/orders" className="hidden lg:flex flex-col items-start text-sm md:text-base hover:opacity-80">
-                <span className="text-xs md:text-sm">Returns</span>
-                <span className="font-semibold">& Orders</span>
-              </Link>
-
-              {/* Cart */}
-              <Link to="/cart" className="relative hover:opacity-80 flex items-center text-base">
-                <FaShoppingCart size={24} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-3 bg-yellow-400 text-dark text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-                <span className="ml-2 font-semibold hidden sm:inline">Cart</span>
-              </Link>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              className="md:hidden shrink-0"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-            </button>
-          </div>
-
-        </div>
-      </nav>
-
-      {/* Departments Sidebar */}
-      {isDepartmentsOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-70"
-            onClick={() => setIsDepartmentsOpen(false)}
-          />
-          <aside className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl border-r z-80">
-            <div className="flex justify-between items-center px-4 py-3 border-b">
-              <h2 className="text-lg font-bold text-dark">Departments</h2>
-              <button
-                onClick={() => setIsDepartmentsOpen(false)}
-                className="text-gray-500 hover:text-gray-800"
-                aria-label="Close departments sidebar"
-              >
-                <FaTimes />
-              </button>
-            </div>
-            <div className="h-[calc(100%-57px)] overflow-y-auto">
-              <DepartmentsMenu onClose={() => setIsDepartmentsOpen(false)} />
-            </div>
-          </aside>
-        </>
-      )}
-
-      {/* Existing Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsMenuOpen(false)}>
-          <div className="bg-primary w-64 h-full p-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-white font-bold">Menu</span>
-              <button onClick={() => setIsMenuOpen(false)} className="text-white">
-                <FaTimes />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <Link to="/products" className="block text-white" onClick={() => setIsMenuOpen(false)}>
-                Products
-              </Link>
-              <Link to="/categories" className="block text-white" onClick={() => setIsMenuOpen(false)}>
-                Categories
-              </Link>
-              <Link to="/business" className="block text-white" onClick={() => setIsMenuOpen(false)}>
-                Businesses
-              </Link>
-              <Link to="/cart" className="block text-white" onClick={() => setIsMenuOpen(false)}>
-                Cart ({cartCount})
-              </Link>
-              {isAuthenticated ? (
-                <>
-                  <Link to="/profile" className="block text-white" onClick={() => setIsMenuOpen(false)}>Profile</Link>
-                  <Link to="/orders" className="block text-white" onClick={() => setIsMenuOpen(false)}>Orders</Link>
-                  <Link to="/wishlist" className="block text-white" onClick={() => setIsMenuOpen(false)}>Wishlist</Link>
-                  {isSeller && (
+              {openDropdown === 'account' && (
+                <div className="absolute right-0 mt-2 w-48 bg-white text-[#111827] rounded-lg shadow-lg border border-gray-200 py-1">
+                  {isAuthenticated ? (
                     <>
-                      <Link to="/seller" className="block text-white" onClick={() => setIsMenuOpen(false)}>Seller Dashboard</Link>
-                      <Link to="/seller/subscription-plans" className="block text-white" onClick={() => setIsMenuOpen(false)}>Subscription Plans</Link>
+                      <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Profile</Link>
+                      <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Orders</Link>
+                      <Link to="/wishlist" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Wishlist</Link>
+                      <button onClick={handleAuthAction} className="w-full text-left px-4 py-2 hover:bg-gray-100">Sign out</button>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/login" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Sign in</Link>
+                      <Link to="/register" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Create account</Link>
                     </>
                   )}
-                  {isAdmin && (
-                    <Link to="/admin" className="block text-white" onClick={() => setIsMenuOpen(false)}>Admin Panel</Link>
-                  )}
-                  <button onClick={handleLogout} className="block text-left text-white w-full">Logout</button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="block text-white" onClick={() => setIsMenuOpen(false)}>Login</Link>
-                  <Link to="/register" className="block text-white" onClick={() => setIsMenuOpen(false)}>Register</Link>
-                </>
+                </div>
               )}
             </div>
+
+            <Link to="/products" className="font-semibold hover:opacity-90">Shop</Link>
+
+            <div className="relative">
+              <button
+                onClick={() => toggleDropdown('category')}
+                className="bg-[#E97A12] px-3 py-2 rounded flex items-center gap-2"
+              >
+                <span>All</span>
+                <FaChevronDown size={12} />
+              </button>
+              {openDropdown === 'category' && (
+                <div className="absolute right-0 mt-2 w-56 bg-white text-[#111827] rounded-lg shadow-lg border border-gray-200 py-1">
+                  {categoryOptions.map((option) => (
+                    <Link key={option.label} to={option.to} className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>
+                      {option.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <button
+                onClick={() => toggleDropdown('currency')}
+                className="bg-[#E97A12] px-3 py-2 rounded flex items-center gap-2"
+              >
+                <span>{currency.label}</span>
+                <FaChevronDown size={12} />
+              </button>
+              {openDropdown === 'currency' && (
+                <div className="absolute right-0 mt-2 w-40 bg-white text-[#111827] rounded-lg shadow-lg border border-gray-200 py-1">
+                  {currencyOptions.map((option) => (
+                    <button
+                      key={option.code}
+                      onClick={() => {
+                        setCurrency(option);
+                        setOpenDropdown(null);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Link to="/register?role=seller" className="font-semibold hover:opacity-90">
+              Sell on Lango Market Pulse
+            </Link>
+
+            <Link to="/cart" className="relative hover:opacity-90" onClick={closeAllMenus}>
+              <FaShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#111827] text-white text-[10px] h-4 w-4 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
+
+          <div className="md:hidden ml-auto flex items-center gap-3">
+            <Link to="/cart" className="relative hover:opacity-90" onClick={closeAllMenus}>
+              <FaShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#111827] text-white text-[10px] h-4 w-4 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <button onClick={() => setIsMobileMenuOpen((prev) => !prev)} className="p-2 rounded bg-[#E97A12]">
+              {isMobileMenuOpen ? <FaTimes size={16} /> : <FaBars size={16} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-[#2F4258] px-3 py-3">
+        <div className="mx-auto max-w-[1366px]">
+          <form onSubmit={handleSubmit} className="mx-auto w-full max-w-xl bg-white rounded-full h-11 flex items-center pl-4 pr-2">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-sm text-gray-700"
+              placeholder="Search products..."
+              type="text"
+            />
+            <button type="submit" className="h-8 w-8 rounded-full bg-[#F2871A] text-white flex items-center justify-center">
+              <FaSearch size={14} />
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-[#F2871A] text-white border-t border-[#E97A12]">
+          <div className="px-4 py-3 space-y-3">
+            <button onClick={() => toggleDropdown('accountMobile')} className="w-full bg-[#E97A12] px-3 py-2 rounded flex items-center justify-between font-semibold">
+              <span>{isAuthenticated ? user?.name || 'My Account' : 'My Account'}</span>
+              <FaChevronDown size={12} />
+            </button>
+            {openDropdown === 'accountMobile' && (
+              <div className="bg-white text-[#111827] rounded-lg py-1">
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Profile</Link>
+                    <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Orders</Link>
+                    <Link to="/wishlist" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Wishlist</Link>
+                    <button onClick={handleAuthAction} className="w-full text-left px-4 py-2 hover:bg-gray-100">Sign out</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Sign in</Link>
+                    <Link to="/register" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Create account</Link>
+                  </>
+                )}
+              </div>
+            )}
+
+            <Link to="/products" className="block font-semibold" onClick={closeAllMenus}>Shop</Link>
+
+            <button onClick={() => toggleDropdown('categoryMobile')} className="w-full bg-[#E97A12] px-3 py-2 rounded flex items-center justify-between">
+              <span>All</span>
+              <FaChevronDown size={12} />
+            </button>
+            {openDropdown === 'categoryMobile' && (
+              <div className="bg-white text-[#111827] rounded-lg py-1">
+                {categoryOptions.map((option) => (
+                  <Link key={option.label} to={option.to} className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>
+                    {option.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <button onClick={() => toggleDropdown('currencyMobile')} className="w-full bg-[#E97A12] px-3 py-2 rounded flex items-center justify-between">
+              <span>{currency.label}</span>
+              <FaChevronDown size={12} />
+            </button>
+            {openDropdown === 'currencyMobile' && (
+              <div className="bg-white text-[#111827] rounded-lg py-1">
+                {currencyOptions.map((option) => (
+                  <button
+                    key={option.code}
+                    onClick={() => {
+                      setCurrency(option);
+                      setOpenDropdown(null);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <Link to="/register?role=seller" className="block font-semibold" onClick={closeAllMenus}>
+              Sell on Lango Market Pulse
+            </Link>
           </div>
         </div>
       )}
-    </>
+    </header>
   );
 };
 

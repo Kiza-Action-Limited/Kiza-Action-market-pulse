@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart, FaStore, FaTruck, FaBrain, FaShieldAlt } from 'react-icons/fa';
 import { formatCurrency } from '../utils/formatters';
+import { getMinimumOrderQuantity, MQQ_TIERS } from '../utils/moq';
 
 const Cart = () => {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal, loading } = useCart();
@@ -71,8 +72,13 @@ const Cart = () => {
               </div>
               
               <div className="divide-y divide-gray-100">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                {cartItems.map((item) => {
+                  const minOrderQty = item.minOrderQuantity || getMinimumOrderQuantity(item);
+                  const stock = Number(item.stock ?? item.quantityAvailable ?? Number.MAX_SAFE_INTEGER);
+                  const itemId = item.id || item._id;
+
+                  return (
+                  <div key={itemId} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                       {/* Product Info */}
                       <div className="md:col-span-6">
@@ -95,6 +101,13 @@ const Cart = () => {
                               <FaStore className="text-[#6B7280] text-xs" />
                               <p className="text-[#6B7280] text-sm">{item.seller?.businessName || 'Verified Seller'}</p>
                             </div>
+                            {minOrderQty > 1 && (
+                              <div className="mt-2 rounded-md border border-orange-200 bg-orange-50 p-2 text-xs text-orange-800">
+                                <div className="font-semibold">Minimum order: {minOrderQty} pieces</div>
+                                <div>{MQQ_TIERS[0].label}: {MQQ_TIERS[0].range}</div>
+                                <div>{MQQ_TIERS[1].label}: {MQQ_TIERS[1].range}</div>
+                              </div>
+                            )}
                             <p className="text-[#F97316] font-semibold mt-1 md:hidden">
                               {formatCurrency(item.price)}
                             </p>
@@ -106,14 +119,14 @@ const Cart = () => {
                       <div className="md:col-span-2 flex justify-center">
                         <div className="flex items-center border border-gray-200 rounded-lg">
                           <button
-                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            onClick={() => updateQuantity(itemId, Math.max(minOrderQty, item.quantity - 1))}
                             className="w-8 h-8 rounded-l-lg hover:bg-gray-100 text-[#6B7280] hover:text-[#F97316] transition-colors"
                           >
                             <FaMinus size={12} className="mx-auto" />
                           </button>
                           <span className="w-10 text-center text-[#111827] font-medium">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.id, Math.min(item.stock, item.quantity + 1))}
+                            onClick={() => updateQuantity(item.id, Math.min(stock, item.quantity + 1))}
                             className="w-8 h-8 rounded-r-lg hover:bg-gray-100 text-[#6B7280] hover:text-[#F97316] transition-colors"
                           >
                             <FaPlus size={12} className="mx-auto" />
@@ -132,7 +145,7 @@ const Cart = () => {
                           <span className="font-bold text-[#F97316] text-lg">{formatCurrency(item.price * item.quantity)}</span>
                         </div>
                         <button
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(itemId)}
                           className="text-red-500 hover:text-red-700 transition-colors p-2"
                           title="Remove item"
                         >
@@ -141,7 +154,8 @@ const Cart = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                    );
+                })}
               </div>
             </div>
             

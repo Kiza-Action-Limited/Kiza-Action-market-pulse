@@ -21,6 +21,16 @@ const AddProduct = () => {
     images: [],
     variants: []
   });
+  const fallbackCategories = [
+    { id: 'electronics', name: 'Electronics' },
+    { id: 'fashion', name: 'Fashion' },
+    { id: 'home-garden', name: 'Home & Garden' },
+    { id: 'beauty-health', name: 'Beauty & Health' },
+    { id: 'sports-outdoor', name: 'Sports & Outdoor' },
+    { id: 'food-grocery', name: 'Food & Grocery' },
+    { id: 'automotive', name: 'Automotive' },
+    { id: 'baby-kids', name: 'Baby & Kids' },
+  ];
 
   useEffect(() => {
     fetchCategories();
@@ -139,6 +149,13 @@ const AddProduct = () => {
     }
   };
 
+  const categoryOptions = categories.length
+    ? categories.map((cat) => ({
+        id: cat.id || cat._id || cat.value,
+        name: cat.name || cat.title || 'Unnamed Category',
+      }))
+    : fallbackCategories;
+
   return (
     <div className="bg-[#F9FAFB] min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -230,9 +247,14 @@ const AddProduct = () => {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FB923C] focus:border-transparent"
                 >
-                  <option value="">Select a category</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                 
+                  <option value="">
+                    Select a category (e.g., Electronics, Fashion, Home)
+                  </option>
+                  {categoryOptions.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
                   ))}
                 </select>
               </div>

@@ -47,8 +47,8 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await authService.getCurrentUser();
-      setUser(response.user);
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
     } catch (error) {
       console.error('Error fetching user:', error);
       logout();
@@ -57,9 +57,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
-      const response = await authService.login(email, password);
+      const response = await authService.login(identifier, password);
       const { token, user } = response;
       localStorage.setItem('token', token);
       setToken(token);
@@ -75,7 +75,11 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authService.register(userData);
+      const payload = {
+        ...userData,
+        fullName: userData.fullName || userData.name,
+      };
+      const response = await authService.register(payload);
       const { token, user } = response;
       localStorage.setItem('token', token);
       setToken(token);
@@ -134,7 +138,7 @@ export const AuthProvider = ({ children }) => {
     resetPlanToDefault,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    isSeller: user?.role === 'seller' || user?.role === 'admin',
+    isSeller: user?.role === 'seller' || user?.role === 'farmer' || user?.role === 'admin',
     isBuyer: user?.role === 'buyer'
   };
 

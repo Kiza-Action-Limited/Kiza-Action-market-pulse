@@ -1,7 +1,14 @@
 // src/types/index.js
 export const UserRole = {
   BUYER: 'buyer',
-  SELLER: 'seller',
+  SELLER: {
+    BRAND: 'brand',
+    WHOLESALER: 'wholesaler',
+    MANUFACTURER: 'manufacturer',
+    RETAILER: 'retailer',
+    FARMER: 'farmer',
+    SMALL_BUSINESS: 'small_business'
+  },
   ADMIN: 'admin'
 };
 
@@ -14,9 +21,7 @@ export const OrderStatus = {
 };
 
 export const PaymentMethod = {
-  CREDIT_CARD: 'credit_card',
-  BANK_TRANSFER: 'bank_transfer',
-  PAYPAL: 'paypal'
+  MOBILE_MONEY:"mpesa"
 };
 
 export const BusinessType = {

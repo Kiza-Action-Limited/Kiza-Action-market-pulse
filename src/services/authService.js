@@ -1,20 +1,33 @@
-// src/services/authService.js
 import api from '../config/axios';
 
+const normalizeAuthResponse = (payload) => {
+  const data = payload?.data || payload || {};
+  return {
+    user: data.user || null,
+    token: data.accessToken || data.token || null,
+    accessToken: data.accessToken || data.token || null,
+    refreshToken: data.refreshToken || null,
+  };
+};
+
 export const authService = {
-  login: async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    return response.data;
+  login: async (identifier, password) => {
+    const body = {
+      password,
+      ...(identifier?.includes('@') ? { email: identifier } : { phone: identifier }),
+    };
+    const response = await api.post('/v1/auth/login', body);
+    return normalizeAuthResponse(response.data);
   },
 
   register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
-    return response.data;
+    const response = await api.post('/v1/auth/register', userData);
+    return normalizeAuthResponse(response.data);
   },
 
   getCurrentUser: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
+    const response = await api.get('/v1/auth/me');
+    return response.data?.data?.user || response.data?.user || null;
   },
 
   logout: () => {
@@ -23,7 +36,6 @@ export const authService = {
 
   checkEmailAccount: async (email) => {
     const payload = { email };
-
     const readExists = (data) => {
       if (typeof data?.exists === 'boolean') return data.exists;
       if (typeof data?.found === 'boolean') return data.found;
@@ -32,13 +44,11 @@ export const authService = {
       if (Array.isArray(data?.users)) return data.users.length > 0;
       return false;
     };
-
     const attempts = [
-      () => api.post('/auth/check-email', payload),
-      () => api.post('/auth/email-exists', payload),
-      () => api.get(`/auth/check-email?email=${encodeURIComponent(email)}`),
+      () => api.post('/v1/auth/check-email', payload),
+      () => api.post('/v1/auth/email-exists', payload),
+      () => api.get(`/v1/auth/check-email?email=${encodeURIComponent(email)}`),
     ];
-
     let lastError = null;
     for (const call of attempts) {
       try {
@@ -48,32 +58,31 @@ export const authService = {
         lastError = error;
       }
     }
-
     throw lastError || new Error('Unable to validate email account');
   },
 
   forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email });
+    const response = await api.post('/v1/auth/forgot-password', { email });
     return response.data;
   },
 
   resetPassword: async (token, password) => {
-    const response = await api.post('/auth/reset-password', { token, password });
+    const response = await api.post('/v1/auth/reset-password', { token, password });
     return response.data;
   },
 
   changePassword: async (currentPassword, newPassword) => {
-    const response = await api.put('/auth/change-password', { currentPassword, newPassword });
+    const response = await api.put('/v1/auth/change-password', { currentPassword, newPassword });
     return response.data;
   },
 
   verifyEmail: async (token) => {
-    const response = await api.post('/auth/verify-email', { token });
+    const response = await api.post('/v1/auth/verify-email', { token });
     return response.data;
   },
 
   resendVerification: async (email) => {
-    const response = await api.post('/auth/resend-verification', { email });
+    const response = await api.post('/v1/auth/resend-verification', { email });
     return response.data;
   }
 };

@@ -7,6 +7,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../utils/formatters';
 import { FaTruck, FaShieldAlt, FaCreditCard, FaUniversity, FaBrain, FaLock, FaArrowLeft } from 'react-icons/fa';
+import { getMinimumOrderQuantity, MQQ_TIERS } from '../utils/moq';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -39,6 +40,18 @@ const Checkout = () => {
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
+
+    const invalidItems = cartItems.filter((item) => {
+      const minOrderQty = item.minOrderQuantity || getMinimumOrderQuantity(item);
+      return Number(item.quantity || 0) < minOrderQty;
+    });
+
+    if (invalidItems.length > 0) {
+      toast.error('Some items are below the minimum order quantity. Please update your cart.');
+      navigate('/cart');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -302,15 +315,25 @@ const Checkout = () => {
               
               {/* Items */}
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm py-2 border-b border-gray-100">
+                {cartItems.map((item) => {
+                  const minOrderQty = item.minOrderQuantity || getMinimumOrderQuantity(item);
+                  const itemId = item.id || item._id;
+
+                  return (
+                  <div key={itemId} className="flex justify-between text-sm py-2 border-b border-gray-100">
                     <div className="flex-1">
                       <span className="text-[#111827] font-medium">{item.name}</span>
                       <span className="text-[#6B7280] text-xs ml-1">x{item.quantity}</span>
+                      {minOrderQty > 1 && (
+                        <div className="mt-1 text-[11px] text-orange-700">
+                          {MQQ_TIERS[0].label}: {MQQ_TIERS[0].range} | {MQQ_TIERS[1].label}: {MQQ_TIERS[1].range}
+                        </div>
+                      )}
                     </div>
                     <span className="text-[#F97316] font-medium">{formatCurrency(item.price * item.quantity)}</span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
               
               {/* Totals */}

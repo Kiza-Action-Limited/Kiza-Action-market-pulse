@@ -1,7 +1,14 @@
 // src/utils/constants.js
 export const USER_ROLES = {
-  BUYER: 'buyer',
-  SELLER: 'seller',
+  BUYER: 'user',
+  SELLER: {
+    BRAND: 'brand',
+    WHOLESALER: 'wholesaler',
+    MANUFACTURER: 'manufacturer',
+    RETAILER: 'retailer',
+    FARMER: 'farmer',
+    SMALL_BUSINESS: 'small_business'
+  },
   ADMIN: 'admin',
 };
 
@@ -23,8 +30,7 @@ export const ORDER_STATUS = {
 };
 
 export const PAYMENT_METHODS = {
-  CREDIT_CARD: 'credit_card',
-  BANK_TRANSFER: 'bank_transfer',
+  MPESA : 'mpesa',
 };
 
 export const SHIPPING_COST = 5;

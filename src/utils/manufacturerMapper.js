@@ -92,8 +92,8 @@ export const buildSupplierCards = (products = [], users = [], premiumProfiles = 
       premiumProfile,
       moqOptions: isMoqBusiness(first?.seller?.businessType)
         ? [
-            { label: 'MQQ1', value: '10 - 2,999 pieces' },
-            { label: 'MQQ2', value: '3,000+ pieces' },
+            { label: 'MQQ1', value: '10 - 2,999 pieces', pricce: ''},
+            { label: 'MQQ2', value: '3,000+ pieces', pricce: ''},
           ]
         : [],
       farmerOptional: normalize(first?.seller?.businessType) === 'farmer',

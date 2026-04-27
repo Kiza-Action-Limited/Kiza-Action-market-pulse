@@ -4,9 +4,9 @@ import api from '../config/axios';
 export const API_ENDPOINTS = {
   // Auth
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    ME: '/auth/me',
+    LOGIN: '/v1/auth/login',
+    REGISTER: '/v1/auth/register',
+    ME: '/v1/auth/me',
   },
   
   // Products
@@ -31,7 +31,7 @@ export const API_ENDPOINTS = {
     CLEAR: '/cart/clear',
   },
   
-  // Orders
+  // Orders5
   ORDERS: {
     BASE: '/orders',
     DETAIL: (id) => `/orders/${id}`,

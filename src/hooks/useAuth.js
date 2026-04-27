@@ -13,7 +13,7 @@ export const useAuth = () => {
   };
   
   const isSeller = () => {
-    return auth.user?.role === 'seller' || auth.user?.role === 'admin';
+    return auth.user?.role === 'seller' || auth.user?.role === 'farmer' || auth.user?.role === 'admin';
   };
   
   const isAdmin = () => {

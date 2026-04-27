@@ -1,21 +1,27 @@
 // src/pages/Products.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
 import { FaFilter, FaTimes } from 'react-icons/fa';
 
 const Products = ({ seller = false }) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
+  const initialFilters = useMemo(() => ({
     search: searchParams.get('search') || '',
     category: searchParams.get('category') || '',
-    minPrice: '',
-    maxPrice: '',
-    sortBy: 'newest'
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    sortBy: searchParams.get('sortBy') || 'newest',
+    businessType: searchParams.get('businessType') || '',
+  }), [searchParams]);
+
+  const [filters, setFilters] = useState({
+    ...initialFilters,
   });
+  const [debouncedSearch, setDebouncedSearch] = useState(initialFilters.search);
   const [categories, setCategories] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState({
@@ -25,31 +31,57 @@ const Products = ({ seller = false }) => {
   });
 
   useEffect(() => {
-    fetchProducts();
+    const timer = setTimeout(() => setDebouncedSearch(filters.search), 300);
+    return () => clearTimeout(timer);
+  }, [filters.search]);
+
+  useEffect(() => {
+    setFilters({
+      search: searchParams.get('search') || '',
+      category: searchParams.get('category') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
+      sortBy: searchParams.get('sortBy') || 'newest',
+      businessType: searchParams.get('businessType') || '',
+    });
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [searchParams]);
+
+  useEffect(() => {
     fetchCategories();
-  }, [filters, pagination.page]);
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [debouncedSearch, filters.category, filters.minPrice, filters.maxPrice, filters.sortBy, filters.businessType, pagination.page]);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filters.search) params.append('search', filters.search);
+      if (debouncedSearch) params.append('search', debouncedSearch);
       if (filters.category) params.append('category', filters.category);
       if (filters.minPrice) params.append('minPrice', filters.minPrice);
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
       if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.businessType) params.append('businessType', filters.businessType);
       params.append('page', pagination.page);
       params.append('limit', 12);
 
       const response = await axios.get(`http://localhost:5000/api/products?${params}`);
-      setProducts(response.data.products);
+      const payload = response.data || {};
+      const productsData = payload.products || payload.data || payload.items || [];
+      const paginationData = payload.pagination || {};
+
+      setProducts(Array.isArray(productsData) ? productsData : []);
       setPagination({
-        page: response.data.page,
-        totalPages: response.data.totalPages,
-        total: response.data.total
+        page: Number(payload.page || paginationData.page || 1),
+        totalPages: Number(payload.totalPages || paginationData.pages || 1),
+        total: Number(payload.total || paginationData.total || 0),
       });
     } catch (error) {
       console.error('Error fetching products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -58,27 +90,47 @@ const Products = ({ seller = false }) => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/categories');
-      setCategories(response.data.categories);
+      const incoming = response.data?.categories || response.data?.data || [];
+      setCategories(Array.isArray(incoming) ? incoming : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters(prev => {
+      const next = { ...prev, [key]: value };
+      const nextQuery = new URLSearchParams();
+      if (next.search) nextQuery.set('search', next.search);
+      if (next.category) nextQuery.set('category', next.category);
+      if (next.minPrice) nextQuery.set('minPrice', next.minPrice);
+      if (next.maxPrice) nextQuery.set('maxPrice', next.maxPrice);
+      if (next.sortBy && next.sortBy !== 'newest') nextQuery.set('sortBy', next.sortBy);
+      if (next.businessType) nextQuery.set('businessType', next.businessType);
+      setSearchParams(nextQuery, { replace: true });
+      return next;
+    });
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const clearFilters = () => {
-    setFilters({
+    const next = {
       search: '',
       category: '',
       minPrice: '',
       maxPrice: '',
-      sortBy: 'newest'
-    });
+      sortBy: 'newest',
+      businessType: '',
+    };
+    setFilters(next);
+    setSearchParams(new URLSearchParams(), { replace: true });
     setPagination(prev => ({ ...prev, page: 1 }));
   };
+
+  const categoryOptions = categories.map((cat) => ({
+    id: cat.id || cat._id || cat.value || cat.slug || cat.name,
+    name: cat.name || cat.title || 'Unnamed Category',
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -129,7 +181,7 @@ const Products = ({ seller = false }) => {
               className="w-full px-3 py-2 border rounded-lg"
             >
               <option value="">All Categories</option>
-              {categories.map(cat => (
+              {categoryOptions.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
@@ -191,9 +243,9 @@ const Products = ({ seller = false }) => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map(product => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id || product._id} product={product} />
                 ))}
               </div>
 

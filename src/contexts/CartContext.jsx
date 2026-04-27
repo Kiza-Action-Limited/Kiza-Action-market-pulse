@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { cartService } from '../services/cartService';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
+import { clampToMinimumOrder, getMinimumOrderQuantity, MQQ_TIERS } from '../utils/moq';
 
 const CartContext = createContext();
 
@@ -53,7 +54,14 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (productId, quantity = 1, variant = null) => {
+  const addToCart = async (productId, quantity = 1, variant = null, productMeta = null) => {
+    const minimumOrderQty = getMinimumOrderQuantity(productMeta);
+    const safeQuantity = clampToMinimumOrder(quantity, minimumOrderQty);
+
+    if (safeQuantity !== quantity) {
+      toast.error(`Minimum order is ${minimumOrderQty} pieces for this product`);
+    }
+
     if (!isAuthenticated) {
       // Guest cart logic
       const existingItemIndex = cartItems.findIndex(
@@ -63,21 +71,29 @@ export const CartProvider = ({ children }) => {
       let newCart;
       if (existingItemIndex !== -1) {
         newCart = [...cartItems];
-        newCart[existingItemIndex].quantity += quantity;
+        newCart[existingItemIndex].quantity += safeQuantity;
       } else {
         // Fetch product details for guest cart
         try {
           const productResponse = await fetch(`http://localhost:5000/api/products/${productId}`);
-          const product = await productResponse.json();
+          const responseBody = await productResponse.json();
+          const product = responseBody?.product || responseBody?.data || responseBody;
+          const itemMinimumOrderQty = getMinimumOrderQuantity(product);
+          const itemQuantity = clampToMinimumOrder(safeQuantity, itemMinimumOrderQty);
+          const itemStock = Number(product?.stock ?? product?.quantityAvailable ?? 0);
+
           newCart = [...cartItems, {
             id: Date.now(),
             productId,
-            name: product.product.name,
-            price: product.product.price,
-            image: product.product.images?.[0],
-            quantity,
+            name: product?.name,
+            price: product?.price,
+            image: product?.images?.[0],
+            quantity: itemQuantity,
             variant,
-            stock: product.product.stock
+            stock: itemStock,
+            seller: product?.seller,
+            minOrderQuantity: itemMinimumOrderQty,
+            mqqTiers: itemMinimumOrderQty > 1 ? MQQ_TIERS : undefined,
           }];
         } catch (error) {
           toast.error('Failed to add to cart');
@@ -93,7 +109,7 @@ export const CartProvider = ({ children }) => {
 
     try {
       setLoading(true);
-      const response = await cartService.addToCart(productId, quantity, variant);
+      const response = await cartService.addToCart(productId, safeQuantity, variant);
       setCartItems(response.items);
       toast.success('Added to cart');
     } catch (error) {
@@ -104,9 +120,17 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = async (itemId, quantity) => {
+    const targetItem = cartItems.find((item) => item.id === itemId || item._id === itemId);
+    const minimumOrderQty = targetItem?.minOrderQuantity || getMinimumOrderQuantity(targetItem);
+    const safeQuantity = clampToMinimumOrder(quantity, minimumOrderQty);
+
+    if (safeQuantity !== quantity) {
+      toast.error(`Minimum order is ${minimumOrderQty} pieces for this product`);
+    }
+
     if (!isAuthenticated) {
       const newCart = cartItems.map(item =>
-        item.id === itemId ? { ...item, quantity: Math.max(1, quantity) } : item
+        item.id === itemId ? { ...item, quantity: safeQuantity } : item
       );
       setCartItems(newCart);
       saveGuestCart(newCart);
@@ -115,7 +139,7 @@ export const CartProvider = ({ children }) => {
 
     try {
       setLoading(true);
-      const response = await cartService.updateQuantity(itemId, quantity);
+      const response = await cartService.updateQuantity(itemId, safeQuantity);
       setCartItems(response.items);
     } catch (error) {
       toast.error('Failed to update cart');

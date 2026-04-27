@@ -11,7 +11,7 @@ const SellerLayout = () => {
     { path: '/seller/add-product', label: 'Add Product', icon: FaPlus },
     { path: '/seller/products', label: 'My Products', icon: FaBox },
     { path: '/seller/orders', label: 'Orders', icon: FaShoppingCart },
-    { path: '/subscription-plans', label: 'Subscription', icon: FaCrown },
+    { path: '/seller/subscription-plans', label: 'Subscription', icon: FaCrown },
   ];
 
   return (

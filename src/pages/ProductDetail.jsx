@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { FaStar, FaStarHalfAlt, FaRegStar, FaShoppingCart, FaHeart, FaRegHeart, FaTruck, FaShieldAlt, FaUndo } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../utils/formatters';
+import { clampToMinimumOrder, getMinimumOrderQuantity, MQQ_TIERS } from '../utils/moq';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -30,7 +31,9 @@ const ProductDetail = () => {
     setLoading(true);
     try {
       const response = await axios.get(`http://localhost:5000/api/products/${id}`);
-      setProduct(response.data.product);
+      const fetchedProduct = response.data.product;
+      setProduct(fetchedProduct);
+      setQuantity(getMinimumOrderQuantity(fetchedProduct));
       setReviews(response.data.reviews || []);
       if (isAuthenticated) {
         checkWishlist();
@@ -56,11 +59,31 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    addToCart(product.id, quantity, selectedVariant);
+    const minOrderQty = getMinimumOrderQuantity(product);
+    const productId = product.id || product._id;
+    const validQuantity = clampToMinimumOrder(quantity, minOrderQty);
+
+    if (validQuantity !== quantity) {
+      setQuantity(validQuantity);
+      toast.error(`Minimum order is ${minOrderQty} pieces for this seller type`);
+      return;
+    }
+
+    addToCart(productId, validQuantity, selectedVariant, product);
   };
 
   const handleBuyNow = () => {
-    addToCart(product.id, quantity, selectedVariant);
+    const minOrderQty = getMinimumOrderQuantity(product);
+    const productId = product.id || product._id;
+    const validQuantity = clampToMinimumOrder(quantity, minOrderQty);
+
+    if (validQuantity !== quantity) {
+      setQuantity(validQuantity);
+      toast.error(`Minimum order is ${minOrderQty} pieces for this seller type`);
+      return;
+    }
+
+    addToCart(productId, validQuantity, selectedVariant, product);
     navigate('/checkout');
   };
 
@@ -139,6 +162,9 @@ const ProductDetail = () => {
   }
 
   const productImages = product.images || ['https://via.placeholder.com/500'];
+  const availableStock = Number(product.stock ?? product.quantityAvailable ?? 0);
+  const minOrderQty = getMinimumOrderQuantity(product);
+  const isMqqRestricted = minOrderQty > 1;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -195,11 +221,20 @@ const ProductDetail = () => {
             </div>
             <div className="flex items-center">
               <span className="font-semibold w-24">Availability:</span>
-              <span className={product.stock > 0 ? 'text-green-600' : 'text-red-600'}>
-                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+              <span className={availableStock > 0 ? 'text-green-600' : 'text-red-600'}>
+                {availableStock > 0 ? `${availableStock} in stock` : 'Out of stock'}
               </span>
             </div>
           </div>
+
+          {isMqqRestricted && (
+            <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-3">
+              <p className="font-semibold text-orange-900">Bulk order terms</p>
+              <p className="text-sm text-orange-800">{MQQ_TIERS[0].label}: {MQQ_TIERS[0].range}</p>
+              <p className="text-sm text-orange-800">{MQQ_TIERS[1].label}: {MQQ_TIERS[1].range}</p>
+              <p className="mt-1 text-sm font-medium text-orange-900">Minimum order: {minOrderQty} pieces</p>
+            </div>
+          )}
 
           {/* Variants */}
           {product.variants && product.variants.length > 0 && (
@@ -224,19 +259,20 @@ const ProductDetail = () => {
             <span className="font-semibold block mb-2">Quantity:</span>
             <div className="flex items-center">
               <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                onClick={() => setQuantity(Math.max(minOrderQty, quantity - 1))}
                 className="w-10 h-10 border rounded-l-lg hover:bg-gray-100"
               >
                 -
               </button>
               <input
                 type="number"
+                min={minOrderQty}
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => setQuantity(clampToMinimumOrder(e.target.value, minOrderQty))}
                 className="w-16 h-10 border-t border-b text-center"
               />
               <button
-                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
                 className="w-10 h-10 border rounded-r-lg hover:bg-gray-100"
               >
                 +
@@ -248,7 +284,7 @@ const ProductDetail = () => {
           <div className="flex gap-4 mb-6">
             <button
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={availableStock === 0}
               className="flex-1 btn-secondary flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               <FaShoppingCart />
@@ -256,7 +292,7 @@ const ProductDetail = () => {
             </button>
             <button
               onClick={handleBuyNow}
-              disabled={product.stock === 0}
+              disabled={availableStock === 0}
               className="flex-1 btn-primary flex items-center justify-center disabled:opacity-50"
             >
               Buy Now

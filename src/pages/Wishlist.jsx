@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { FaTrash, FaShoppingCart } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../utils/formatters';
+import { getMinimumOrderQuantity } from '../utils/moq';
 
 const Wishlist = () => {
   const { token, isAuthenticated } = useAuth();
@@ -46,7 +47,8 @@ const Wishlist = () => {
   };
 
   const handleAddToCart = (product) => {
-    addToCart(product.id, 1);
+    const minOrderQty = getMinimumOrderQuantity(product);
+    addToCart(product.id || product.productId || product._id, minOrderQty, null, product);
   };
 
   if (!isAuthenticated) {
