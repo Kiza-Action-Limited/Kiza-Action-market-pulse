@@ -14,14 +14,44 @@ const firstSuccess = async (requests = []) => {
 
 export const manufacturerService = {
   getMarketplaceData: async () => {
-    const [categoriesRes, productsRes] = await Promise.all([
-      api.get('/categories'),
-      api.get('/products', { params: { limit: 120 } }),
+    const productsRes = await firstSuccess([
+      () => api.get('/v1/products', { params: { limit: 120 } }),
+      () => api.get('/products', { params: { limit: 120 } }),
     ]);
+    const products = productsRes.data?.products || productsRes.data?.data || [];
+
+    let categories = [];
+    try {
+      const categoriesRes = await api.get('/categories');
+      categories = categoriesRes.data?.categories || categoriesRes.data?.data || [];
+    } catch (error) {
+      // Derive categories from live products when categories endpoint is unavailable.
+      const categorySet = Array.from(new Set(products.map((item) => item?.category).filter(Boolean)));
+      categories = categorySet.map((name) => ({ id: name, name }));
+    }
+
+    let businesses = [];
+    try {
+      const businessesRes = await firstSuccess([
+        () => api.get('/v1/businesses', { params: { limit: 200 } }),
+        () => api.get('/businesses', { params: { limit: 200 } }),
+        () => api.get('/v1/suppliers', { params: { limit: 200 } }),
+        () => api.get('/suppliers', { params: { limit: 200 } }),
+      ]);
+      businesses =
+        businessesRes.data?.businesses ||
+        businessesRes.data?.suppliers ||
+        businessesRes.data?.data ||
+        [];
+      if (!Array.isArray(businesses)) businesses = [];
+    } catch (error) {
+      businesses = [];
+    }
 
     return {
-      categories: categoriesRes.data?.categories || [],
-      products: productsRes.data?.products || [],
+      categories,
+      products,
+      businesses,
     };
   },
 

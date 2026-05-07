@@ -1,14 +1,10 @@
 // src/pages/AdminCategories.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import { FaEdit, FaTrash, FaPlus, FaTag, FaStore, FaBrain } from 'react-icons/fa';
+import api from '../config/axios';
+import { FaEdit, FaTrash, FaPlus, FaTag, FaStore } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { mockCategories } from '../data/mockData';
-import { disableMockData, isMockDataEnabled } from '../utils/mockDataControl';
 
 const AdminCategories = () => {
-  const { token } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -18,26 +14,43 @@ const AdminCategories = () => {
     description: '',
     icon: ''
   });
-  const [usingMockData, setUsingMockData] = useState(false);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
+  const requestWithCategoryFallback = async (method, path, payload) => {
+    const candidates = method.toLowerCase() === 'get'
+      ? ['/v1/categories', '/categories']
+      : [`/v1${path}`, path];
+
+    let lastError;
+    for (const url of candidates) {
+      try {
+        return await api({ method, url, data: payload });
+      } catch (error) {
+        lastError = error;
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          throw error;
+        }
+      }
+    }
+    throw lastError;
+  };
+
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/categories');
-      setCategories(response.data.categories);
-      setUsingMockData(false);
+      const response = await requestWithCategoryFallback('get', '/categories');
+      const categoryList =
+        response.data?.categories ||
+        response.data?.data?.categories ||
+        response.data?.data ||
+        response.data ||
+        [];
+      setCategories(Array.isArray(categoryList) ? categoryList : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      if (isMockDataEnabled()) {
-        setCategories(mockCategories);
-        setUsingMockData(true);
-        toast.success('Showing mock categories for UI appearance');
-      } else {
-        toast.error('Failed to load categories');
-      }
+      toast.error(error.response?.data?.message || 'Failed to load categories', { id: 'admin-categories-load' });
     } finally {
       setLoading(false);
     }
@@ -45,41 +58,12 @@ const AdminCategories = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (usingMockData) {
-      if (editingCategory) {
-        setCategories((prev) =>
-          prev.map((category) =>
-            category.id === editingCategory.id ? { ...category, ...formData } : category
-          )
-        );
-        toast.success('Mock category updated');
-      } else {
-        setCategories((prev) => [
-          ...prev,
-          { id: `mock-category-${Date.now()}`, ...formData, productCount: 0 },
-        ]);
-        toast.success('Mock category added');
-      }
-      setShowModal(false);
-      setEditingCategory(null);
-      setFormData({ name: '', description: '', icon: '' });
-      return;
-    }
-
     try {
       if (editingCategory) {
-        await axios.put(
-          `http://localhost:5000/api/categories/${editingCategory.id}`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await requestWithCategoryFallback('put', `/categories/${editingCategory._id || editingCategory.id}`, formData);
         toast.success('Category updated successfully');
       } else {
-        await axios.post(
-          'http://localhost:5000/api/categories',
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await requestWithCategoryFallback('post', '/categories', formData);
         toast.success('Category added successfully');
       }
       setShowModal(false);
@@ -93,16 +77,8 @@ const AdminCategories = () => {
 
   const handleDelete = async (categoryId) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      if (usingMockData) {
-        setCategories((prev) => prev.filter((category) => category.id !== categoryId));
-        toast.success('Mock category deleted');
-        return;
-      }
-
       try {
-        await axios.delete(`http://localhost:5000/api/categories/${categoryId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await requestWithCategoryFallback('delete', `/categories/${categoryId}`);
         toast.success('Category deleted successfully');
         fetchCategories();
       } catch (error) {
@@ -119,13 +95,6 @@ const AdminCategories = () => {
       icon: category.icon || ''
     });
     setShowModal(true);
-  };
-
-  const removeMockData = () => {
-    disableMockData();
-    setUsingMockData(false);
-    setCategories([]);
-    toast.success('Mock data disabled. Real backend categories will be used.');
   };
 
   if (loading) {
@@ -170,23 +139,6 @@ const AdminCategories = () => {
           </button>
         </div>
 
-        {usingMockData && (
-          <div className="mb-6 rounded-xl border border-[#F97316]/30 bg-[#F97316]/10 p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FaBrain className="text-[#F97316]" />
-              <p className="text-[#111827] text-sm">
-                <span className="font-semibold text-[#F97316]">Mock Mode:</span> Categories are visible for appearance only.
-              </p>
-            </div>
-            <button 
-              onClick={removeMockData} 
-              className="px-3 py-1.5 text-sm rounded-lg bg-[#F97316] text-white hover:bg-[#F97316]/90 transition-colors"
-            >
-              Remove Mock Data
-            </button>
-          </div>
-        )}
-        
         {/* Categories Grid */}
         {categories.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl shadow-sm">
@@ -217,7 +169,7 @@ const AdminCategories = () => {
               const gradient = gradientColors[index % gradientColors.length];
               
               return (
-                <div key={category.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div key={category._id || category.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <div className={`h-28 bg-linear-to-r ${gradient} flex items-center justify-center`}>
                     <span className="text-5xl">{category.icon || '📦'}</span>
                   </div>
@@ -237,7 +189,7 @@ const AdminCategories = () => {
                           <FaEdit size={18} />
                         </button>
                         <button
-                          onClick={() => handleDelete(category.id)}
+                          onClick={() => handleDelete(category._id || category.id)}
                           className="text-red-500 hover:text-red-700 transition-colors"
                           title="Delete category"
                         >

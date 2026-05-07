@@ -35,7 +35,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const businessTypes = ['Brand', 'Wholesaler', 'Manufacturer', 'Retailer', 'Farmer', 'Small Business'];
+  const businessTypes = ['Wholesaler', 'Manufacturer', 'Retailer', 'Farmer', 'Other Business'];
 
   useEffect(() => {
     const roleParam = searchParams.get('role');
@@ -152,6 +152,7 @@ const Register = () => {
     setLoading(true);
     const { confirmPassword, ...registerData } = formData;
     registerData.phone = phoneValue;
+    registerData.businessType = registerData.role === 'seller' ? registerData.businessType : 'consumer';
 
     const result = await register(registerData);
     if (result.success) {

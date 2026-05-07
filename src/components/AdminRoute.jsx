@@ -1,7 +1,8 @@
 // src/components/AdminRoute.jsx
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Login from '../pages/Login';
 
 const AdminRoute = () => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
@@ -14,7 +15,7 @@ const AdminRoute = () => {
     );
   }
 
-  return isAuthenticated && isAdmin ? <Outlet /> : <Navigate to="/" />;
+  return isAuthenticated && isAdmin ? <Outlet /> : <Login />;
 };
 
 export default AdminRoute;

@@ -1,6 +1,6 @@
 // src/pages/AdminOrders.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../config/axios';
 import { useAuth } from '../context/AuthContext';
 import { FaEye, FaTruck, FaCheckCircle, FaBox, FaUser, FaMapMarkerAlt, FaClock, FaBrain, FaBell } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -19,9 +19,7 @@ const AdminOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/orders', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/v1/admin/orders');
       setOrders(response.data.orders);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -33,11 +31,7 @@ const AdminOrders = () => {
 
   const updateOrderStatus = async (orderId, status) => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
-        { status },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put(`/v1/admin/orders/${orderId}/status`, { status });
       toast.success('Order status updated successfully');
       fetchOrders();
     } catch (error) {
@@ -224,12 +218,12 @@ const AdminOrders = () => {
         {/* Orders List */}
         <div className="space-y-4">
           {filteredOrders.map((order) => (
-            <div key={order.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div key={order._id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               <div className="bg-linear-to-r from-gray-50 to-white px-4 sm:px-6 py-4 border-b flex flex-wrap gap-3 justify-between items-center">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className="flex items-center gap-2">
                     <FaBox className="text-[#FB923C]" />
-                    <span className="text-sm font-mono text-[#FB923C]">#{order.id.slice(-8)}</span>
+                    <span className="text-sm font-mono text-[#FB923C]">#{String(order._id).slice(-8)}</span>
                   </div>
                   <div className="w-px h-4 bg-gray-300" />
                   <div className="flex items-center gap-2 text-sm text-[#6B7280]">
@@ -244,16 +238,16 @@ const AdminOrders = () => {
                   </span>
                   <span className="font-bold text-[#16A34A]">{formatCurrency(order.total)}</span>
                   <button
-                    onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
+                    onClick={() => setSelectedOrder(selectedOrder?._id === order._id ? null : order)}
                     className="text-[#F97316] hover:text-[#FB923C] font-medium flex items-center gap-1 transition-colors"
                   >
                     <FaEye size={14} />
-                    {selectedOrder?.id === order.id ? 'Hide Details' : 'View Details'}
+                    {selectedOrder?._id === order._id ? 'Hide Details' : 'View Details'}
                   </button>
                 </div>
               </div>
               
-              {selectedOrder?.id === order.id && (
+              {selectedOrder?._id === order._id && (
                 <div className="p-6 border-t bg-[#F9FAFB]">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-white rounded-lg p-4 shadow-sm">
@@ -312,7 +306,7 @@ const AdminOrders = () => {
                     <label className="block text-sm font-medium mb-2 text-[#111827]">Update Order Status</label>
                     <select
                       value={order.status}
-                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                      onChange={(e) => updateOrderStatus(order._id, e.target.value)}
                       className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
                     >
                       <option value="pending">Pending</option>

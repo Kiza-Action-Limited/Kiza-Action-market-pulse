@@ -3,16 +3,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../config/axios';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../utils/formatters';
-import { FaTruck, FaShieldAlt, FaCreditCard, FaUniversity, FaBrain, FaLock, FaArrowLeft } from 'react-icons/fa';
+import { FaTruck, FaShieldAlt, FaBrain, FaLock, FaArrowLeft } from 'react-icons/fa';
 import { getMinimumOrderQuantity, MQQ_TIERS } from '../utils/moq';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, getCartTotal, clearCart } = useCart();
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     fullName: user?.name || '',
@@ -24,7 +24,7 @@ const Checkout = () => {
     country: 'Kenya',
     phone: ''
   });
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const paymentMethod = 'mpesa';
 
   if (cartItems.length === 0) {
     navigate('/cart');
@@ -62,19 +62,33 @@ const Checkout = () => {
           price: item.price
         })),
         shippingAddress,
-        paymentMethod,
+        paymentMethod: 'mpesa',
         total: getCartTotal()
       };
 
-      const response = await axios.post(
-        'http://localhost:5000/api/orders',
-        orderData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      let response;
+      try {
+        response = await api.post('/v1/orders', orderData);
+      } catch (error) {
+        if (error.response?.status === 404) {
+          response = await api.post('/orders', orderData);
+        } else {
+          throw error;
+        }
+      }
 
       toast.success('Order placed successfully!');
       clearCart();
-      navigate(`/orders/${response.data.order.id}/track`);
+      const orderId =
+        response?.data?.order?.id ||
+        response?.data?.order?._id ||
+        response?.data?.data?.order?.id ||
+        response?.data?.data?.order?._id;
+      if (orderId) {
+        navigate(`/orders/${orderId}/track`);
+      } else {
+        navigate('/orders');
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to place order');
     } finally {
@@ -225,69 +239,12 @@ const Checkout = () => {
                   <FaLock className="text-[#16A34A] text-xl" />
                   <h2 className="text-xl font-semibold text-[#111827]">Payment Method</h2>
                 </div>
-                
-                <div className="space-y-3">
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      value="credit_card"
-                      checked={paymentMethod === 'credit_card'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="mr-3 text-[#F97316] focus:ring-[#F97316]"
-                    />
-                    <div className="flex items-center gap-2">
-                      <FaCreditCard className="text-[#FB923C]" />
-                      <span className="font-medium">Credit Card</span>
-                      <span className="text-xs text-[#6B7280] ml-2">Visa, Mastercard, American Express</span>
-                    </div>
-                  </label>
-                  
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      value="bank_transfer"
-                      checked={paymentMethod === 'bank_transfer'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="mr-3 text-[#F97316] focus:ring-[#F97316]"
-                    />
-                    <div className="flex items-center gap-2">
-                      <FaUniversity className="text-[#F97316]" />
-                      <span className="font-medium">Bank Transfer</span>
-                      <span className="text-xs text-[#6B7280] ml-2">M-Pesa, Bank Deposit</span>
-                    </div>
-                  </label>
+                <div className="p-4 rounded-lg border border-[#16A34A]/30 bg-[#16A34A]/5">
+                  <p className="font-semibold text-[#111827]">M-Pesa</p>
+                  <p className="text-sm text-[#6B7280] mt-1">
+                    Pay securely via M-Pesa STK Push. A prompt will be sent to your phone number.
+                  </p>
                 </div>
-                
-                {paymentMethod === 'credit_card' && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-[#6B7280] mb-3">Demo Mode - Card details not required</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        placeholder="Card Number"
-                        disabled
-                        className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-[#6B7280]"
-                        value="4242 4242 4242 4242"
-                      />
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="MM/YY"
-                          disabled
-                          className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg bg-white text-[#6B7280]"
-                          value="12/25"
-                        />
-                        <input
-                          type="text"
-                          placeholder="CVC"
-                          disabled
-                          className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg bg-white text-[#6B7280]"
-                          value="123"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               
               {/* Submit Button */}

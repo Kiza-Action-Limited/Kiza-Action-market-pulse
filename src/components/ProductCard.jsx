@@ -11,6 +11,8 @@ const ProductCard = ({ product }) => {
   const isMqqRestricted = minOrderQty > 1;
   const productId = product.id || product._id;
   const availableStock = Number(product.stock ?? product.quantityAvailable ?? 0);
+  const primaryImage = product.images?.[0];
+  const primaryImageUrl = typeof primaryImage === 'string' ? primaryImage : primaryImage?.url;
   const rating = Number(product.rating ?? 0).toFixed(1);
   const hasDiscount = Number(product.originalPrice) > Number(product.price);
   const discountPct = hasDiscount
@@ -32,8 +34,8 @@ const ProductCard = ({ product }) => {
     <div className="group hover-card bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
       <Link to={`/products/${productId}`} className="relative block">
         <div className="h-44 bg-gray-100">
-          {product.images?.[0] ? (
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+          {primaryImageUrl ? (
+            <img src={primaryImageUrl} alt={product.name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
           )}

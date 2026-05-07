@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useSubscription } from '../context/SubscriptionContext';
 
 export const SubscriptionGuard = ({ children }) => {
@@ -16,5 +16,5 @@ export const SubscriptionGuard = ({ children }) => {
     return <Navigate to="/seller/subscription-plans" replace />;
   }
 
-  return children;
+  return children || <Outlet />;
 };

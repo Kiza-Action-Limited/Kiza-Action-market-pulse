@@ -44,11 +44,10 @@ const UnimartStyleShowcase = () => {
   );
 
   const tabs = [
-    'JEWELRY AND ACCESSORIES (262)',
-    'FASHION AND WEARABLES (237)',
-    'FOOT WEARS (175)',
-    'PHONES, GADGETS AND ACCESSORIES (131)',
-    'BEAUTY AND PERSONAL CARE (82)',
+    'JEWELRY AND ACCESSORIES',
+    'FASHION AND WEARABLES',
+    'FOOT WEARS',
+    'PHONES, GADGETS AND ACCESSORIES',
   ];
 
   useEffect(() => {

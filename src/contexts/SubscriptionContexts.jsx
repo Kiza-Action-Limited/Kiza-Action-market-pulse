@@ -1,18 +1,30 @@
-// src/contexts/SubscriptionContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-// Mock API – replace with real backend call
-const fetchUserSubscription = async () => {
-  // Simulate network request
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Change to { active: true } after payment
-      resolve({ active: false, planId: null, expiresAt: null });
-    }, 500);
-  });
-};
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { ALL_PLANS } from '../config/subscriptionPlans';
 
 const SubscriptionContext = createContext();
+
+const resolveSubscriptionFromUser = (user) => {
+  if (!user) return { active: false, planId: null, expiresAt: null };
+
+  const planId =
+    user?.subscription?.planId ||
+    user?.planId ||
+    user?.subscriptionTier ||
+    null;
+  const expiresAt = user?.subscription?.expiresAt || user?.subscriptionExpiry || null;
+  const hasKnownPlan = Boolean(planId && ALL_PLANS.some((plan) => plan.id === planId));
+  const isLegacyPaidTier = planId === 'v3' || planId === 'v4';
+  const isExplicitlyActive = user?.subscription?.active === true;
+  const hasPaidTier = hasKnownPlan || isLegacyPaidTier || isExplicitlyActive;
+  const notExpired = !expiresAt || new Date(expiresAt) > new Date();
+
+  return {
+    active: Boolean(hasPaidTier && notExpired),
+    planId,
+    expiresAt,
+  };
+};
 
 export const useSubscription = () => {
   const context = useContext(SubscriptionContext);
@@ -23,40 +35,26 @@ export const useSubscription = () => {
 };
 
 export const SubscriptionProvider = ({ children }) => {
-  const [subscription, setSubscription] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [subscription, setSubscription] = useState(resolveSubscriptionFromUser(user));
+  const [loading] = useState(false);
 
   useEffect(() => {
-    loadSubscription();
-  }, []);
+    setSubscription(resolveSubscriptionFromUser(user));
+  }, [user]);
 
-  const loadSubscription = async () => {
-    try {
-      const data = await fetchUserSubscription();
-      setSubscription(data);
-    } catch (error) {
-      console.error('Failed to load subscription', error);
-      setSubscription({ active: false });
-    } finally {
-      setLoading(false);
-    }
+  const activateSubscription = async () => {
+    const resolved = resolveSubscriptionFromUser(user);
+    setSubscription(resolved);
+    return resolved;
   };
 
-  const activateSubscription = async (planId, paymentDetails) => {
-    // Replace with your actual API endpoint
-    const response = await fetch('/api/subscription/activate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ planId, paymentDetails }),
-    });
-    if (!response.ok) throw new Error('Activation failed');
-    const data = await response.json();
-    setSubscription({ active: true, planId: data.planId, expiresAt: data.expiresAt });
-    return data;
+  const refresh = () => {
+    setSubscription(resolveSubscriptionFromUser(user));
   };
 
   return (
-    <SubscriptionContext.Provider value={{ subscription, loading, activateSubscription, refresh: loadSubscription }}>
+    <SubscriptionContext.Provider value={{ subscription, loading, activateSubscription, refresh }}>
       {children}
     </SubscriptionContext.Provider>
   );

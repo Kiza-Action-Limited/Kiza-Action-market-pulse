@@ -42,6 +42,17 @@ const queueOfflineContact = (payload) => {
   localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
 };
 
+const deliverContactPayload = async (payload) => {
+  try {
+    return await api.post('/v1/contact', payload);
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return api.post('/contact', payload);
+    }
+    throw error;
+  }
+};
+
 const Contact = () => {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [searchParams] = useSearchParams();
@@ -85,7 +96,7 @@ const Contact = () => {
     };
 
     try {
-      const response = await api.post('/contact', payload);
+      const response = await deliverContactPayload(payload);
       const ticketId = response?.data?.ticketId || `TKT-${Date.now()}`;
       setSubmitStatus({ ok: true, ticketId, queued: false });
       toast.success('Message sent successfully');

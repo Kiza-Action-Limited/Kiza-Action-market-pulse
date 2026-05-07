@@ -1,23 +1,34 @@
 // src/layouts/SellerLayout.jsx
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { FaTachometerAlt, FaPlus, FaBox, FaShoppingCart, FaCrown } from 'react-icons/fa';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaTachometerAlt, FaPlus, FaBox, FaShoppingCart, FaCrown, FaBroadcastTower, FaUser, FaSignOutAlt, FaHome } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const SellerLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   
   const navItems = [
+    { path: '/', label: 'Home', icon: FaHome },
     { path: '/seller', label: 'Dashboard', icon: FaTachometerAlt },
     { path: '/seller/add-product', label: 'Add Product', icon: FaPlus },
     { path: '/seller/products', label: 'My Products', icon: FaBox },
     { path: '/seller/orders', label: 'Orders', icon: FaShoppingCart },
+    { path: '/seller/scarcity-board', label: 'Scarcity Board', icon: FaBroadcastTower },
     { path: '/seller/subscription-plans', label: 'Subscription', icon: FaCrown },
   ];
+  const currentNav = navItems.find((item) => item.path === location.pathname);
+  const pageTitle = currentNav?.label || 'Seller Workspace';
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-primary text-white">
+      <aside className="w-64 bg-primary text-white sticky top-0 h-screen overflow-y-auto">
         <div className="p-6">
           <h2 className="text-xl font-bold">Seller Panel</h2>
         </div>
@@ -37,11 +48,33 @@ const SellerLayout = () => {
             );
           })}
         </nav>
+        <div className="mt-8 border-t border-white/20 pt-4">
+          <Link
+            to="/seller/profile"
+            className="flex items-center px-6 py-3 hover:bg-primary-dark transition"
+          >
+            <FaUser className="mr-3" />
+            <span>Profile</span>
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center px-6 py-3 hover:bg-primary-dark transition text-left"
+          >
+            <FaSignOutAlt className="mr-3" />
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
       
       {/* Main Content */}
-      <div className="flex-1">
-        <Outlet />
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-900">{pageTitle}</h1>
+        </header>
+        <div className="flex-1 overflow-y-auto">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

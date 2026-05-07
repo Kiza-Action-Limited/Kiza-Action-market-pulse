@@ -122,6 +122,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasFeature = (featureKey) => hasFeatureAccess(activePlan, featureKey);
+  const roleValue = String(user?.role || '').toLowerCase();
+  const businessTypeValue = String(user?.businessType || '').toLowerCase();
+  const sellerCategories = new Set(['seller', 'wholesaler', 'farmer', 'retailer', 'manufacturer']);
+  const buyerCategories = new Set(['buyer', 'consumer']);
 
   const value = {
     user,
@@ -138,8 +142,8 @@ export const AuthProvider = ({ children }) => {
     resetPlanToDefault,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    isSeller: user?.role === 'seller' || user?.role === 'farmer' || user?.role === 'admin',
-    isBuyer: user?.role === 'buyer'
+    isSeller: user?.role === 'admin' || sellerCategories.has(roleValue) || sellerCategories.has(businessTypeValue),
+    isBuyer: buyerCategories.has(roleValue) || buyerCategories.has(businessTypeValue)
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaEnvelope, FaLock, FaBrain, FaArrowRight, FaEye, FaEyeSlash, FaUser, FaStore } from 'react-icons/fa';
 import marketPulseLogo from '../assets/Marketpulse-logo.png';
@@ -12,14 +12,21 @@ const Login = () => {
   const [accountType, setAccountType] = useState('buyer');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isAdminLogin = location.pathname.startsWith('/admin');
 
   useEffect(() => {
+    if (isAdminLogin) {
+      setAccountType('admin');
+      return;
+    }
+
     const roleParam = searchParams.get('role');
     if (roleParam === 'seller' || roleParam === 'buyer') {
       setAccountType(roleParam);
     }
-  }, [searchParams]);
+  }, [isAdminLogin, searchParams]);
 
   const selectAccountType = (nextType) => {
     setAccountType(nextType);
@@ -34,7 +41,11 @@ const Login = () => {
 
     const result = await login(identifier, password);
     if (result.success) {
-      navigate(accountType === 'seller' ? '/seller' : '/');
+      if (accountType === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate(accountType === 'seller' ? '/seller' : '/');
+      }
     }
 
     setLoading(false);
@@ -71,11 +82,13 @@ const Login = () => {
 
         <div className="w-full max-w-xl mx-auto space-y-6">
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-extrabold text-[#F97316]">Sign in to your account</h2>
+            <h2 className="text-3xl font-extrabold text-[#F97316]">
+              {isAdminLogin ? 'Admin sign in' : 'Sign in to your account'}
+            </h2>
             <p className="mt-2 text-sm text-[#6B7280] italic">Lango Lako la Biashara Smart</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {!isAdminLogin && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {cards.map((card) => {
               const Icon = card.icon;
               const isActive = accountType === card.key;
@@ -94,11 +107,11 @@ const Login = () => {
                 </button>
               );
             })}
-          </div>
+          </div>}
 
           <form className="space-y-4 rounded-xl border border-gray-200 bg-white p-5" onSubmit={handleSubmit}>
             <p className="text-sm font-semibold text-[#111827]">
-              {accountType === 'seller' ? 'Seller credentials' : 'Buyer credentials'}
+              {accountType === 'admin' ? 'Admin credentials' : accountType === 'seller' ? 'Seller credentials' : 'Buyer credentials'}
             </p>
 
             <div className="relative">
@@ -161,7 +174,7 @@ const Login = () => {
                 </>
               ) : (
                 <>
-                  {accountType === 'seller' ? 'Sign in as Seller' : 'Sign in as Buyer'}
+                  {accountType === 'admin' ? 'Sign in as Admin' : accountType === 'seller' ? 'Sign in as Seller' : 'Sign in as Buyer'}
                   <FaArrowRight size={14} />
                 </>
               )}
@@ -178,7 +191,7 @@ const Login = () => {
             </p>
           </div>
 
-          <p className="text-center text-sm text-[#6B7280]">
+          {!isAdminLogin && <p className="text-center text-sm text-[#6B7280]">
             Do not have an account?{' '}
             <Link
               to={`/register?role=${accountType}`}
@@ -186,7 +199,7 @@ const Login = () => {
             >
               Create {accountType === 'seller' ? 'Seller' : 'Buyer'} account
             </Link>
-          </p>
+          </p>}
         </div>
       </div>
     </div>

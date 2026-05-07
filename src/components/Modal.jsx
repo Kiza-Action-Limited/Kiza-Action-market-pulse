@@ -1,73 +1,76 @@
-// src/components/Pagination.jsx
-import React from 'react';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import React, { useEffect } from 'react';
+import { FaTimes } from 'react-icons/fa';
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-    
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('...');
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      }
-    }
-    
-    return pages;
-  };
+const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md',
+  closeOnOverlay = true,
+  showCloseButton = true,
+}) => {
+  useEffect(() => {
+    if (!isOpen) return undefined;
 
-  if (totalPages <= 1) return null;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose?.();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const sizeClass =
+    size === 'sm'
+      ? 'max-w-md'
+      : size === 'lg'
+      ? 'max-w-4xl'
+      : size === 'xl'
+      ? 'max-w-6xl'
+      : 'max-w-2xl';
 
   return (
-    <div className="flex justify-center items-center space-x-2 mt-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="px-3 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-      >
-        <FaChevronLeft size={14} />
-      </button>
-      
-      {getPageNumbers().map((page, index) => (
-        <button
-          key={index}
-          onClick={() => typeof page === 'number' && onPageChange(page)}
-          disabled={page === '...'}
-          className={`px-4 py-2 border rounded-lg ${
-            page === currentPage
-              ? 'bg-primary text-white border-primary'
-              : 'hover:bg-gray-50'
-          } ${page === '...' ? 'cursor-default' : ''}`}
-        >
-          {page}
-        </button>
-      ))}
-      
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="px-3 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-      >
-        <FaChevronRight size={14} />
-      </button>
+        type="button"
+        aria-label="Close modal overlay"
+        className="absolute inset-0 bg-black/50"
+        onClick={() => {
+          if (closeOnOverlay) onClose?.();
+        }}
+      />
+
+      <div className={`relative z-10 w-full ${sizeClass} rounded-xl bg-white shadow-2xl`}>
+        {(title || showCloseButton) && (
+          <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+            <h2 className="text-lg font-semibold text-[#111827]">{title || ''}</h2>
+            {showCloseButton && (
+              <button
+                type="button"
+                onClick={() => onClose?.()}
+                className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                aria-label="Close modal"
+              >
+                <FaTimes size={14} />
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="max-h-[80vh] overflow-y-auto p-5">{children}</div>
+      </div>
     </div>
   );
 };
 
-export default Pagination;
+export default Modal;

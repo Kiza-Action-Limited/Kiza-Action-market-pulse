@@ -1,16 +1,16 @@
 // src/pages/Wishlist.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { userService } from '../services/userService';
 import { FaTrash, FaShoppingCart } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../utils/formatters';
 import { getMinimumOrderQuantity } from '../utils/moq';
 
 const Wishlist = () => {
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,10 +23,8 @@ const Wishlist = () => {
 
   const fetchWishlist = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/wishlist', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setWishlistItems(response.data.items);
+      const response = await userService.getWishlist();
+      setWishlistItems(response?.items || []);
     } catch (error) {
       console.error('Error fetching wishlist:', error);
     } finally {
@@ -36,13 +34,12 @@ const Wishlist = () => {
 
   const handleRemoveFromWishlist = async (productId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/wishlist/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setWishlistItems(wishlistItems.filter(item => item.productId !== productId));
+      await userService.removeFromWishlist(productId);
+      setWishlistItems((prev) => prev.filter((item) => item.productId !== productId));
       toast.success('Removed from wishlist');
     } catch (error) {
-      toast.error('Failed to remove from wishlist');
+      const message = error?.response?.data?.message || 'Failed to remove from wishlist';
+      toast.error(message);
     }
   };
 

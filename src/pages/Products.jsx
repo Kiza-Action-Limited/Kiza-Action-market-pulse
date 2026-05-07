@@ -1,9 +1,9 @@
 // src/pages/Products.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import ProductCard from '../components/ProductCard';
 import { FaFilter, FaTimes } from 'react-icons/fa';
+import { productService } from '../services/productService';
 
 const Products = ({ seller = false }) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -68,16 +68,24 @@ const Products = ({ seller = false }) => {
       params.append('page', pagination.page);
       params.append('limit', 12);
 
-      const response = await axios.get(`http://localhost:5000/api/products?${params}`);
-      const payload = response.data || {};
+      const payload = await productService.getAll({
+        search: debouncedSearch || undefined,
+        category: filters.category || undefined,
+        minPrice: filters.minPrice || undefined,
+        maxPrice: filters.maxPrice || undefined,
+        sortBy: filters.sortBy || undefined,
+        businessType: filters.businessType || undefined,
+        page: pagination.page,
+        limit: 12,
+      });
       const productsData = payload.products || payload.data || payload.items || [];
       const paginationData = payload.pagination || {};
 
       setProducts(Array.isArray(productsData) ? productsData : []);
       setPagination({
-        page: Number(payload.page || paginationData.page || 1),
+        page: Number(payload.currentPage || payload.page || paginationData.page || 1),
         totalPages: Number(payload.totalPages || paginationData.pages || 1),
-        total: Number(payload.total || paginationData.total || 0),
+        total: Number(payload.totalProducts || payload.total || paginationData.total || 0),
       });
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -89,11 +97,13 @@ const Products = ({ seller = false }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/categories');
-      const incoming = response.data?.categories || response.data?.data || [];
-      setCategories(Array.isArray(incoming) ? incoming : []);
+      const payload = await productService.getAll({ page: 1, limit: 120 });
+      const liveProducts = payload?.products || payload?.data || payload?.items || [];
+      const categorySet = Array.from(new Set(liveProducts.map((item) => item?.category).filter(Boolean)));
+      setCategories(categorySet.map((name) => ({ id: name, name })));
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories([]);
     }
   };
 

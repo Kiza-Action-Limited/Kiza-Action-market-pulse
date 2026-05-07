@@ -1,14 +1,15 @@
 // src/pages/SellerDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { FaPlus, FaEdit, FaTrash, FaChartLine, FaBox, FaDollarSign, FaShoppingCart, FaLock, FaUnlockAlt, FaBrain } from 'react-icons/fa';
 import { formatCurrency } from '../utils/formatters';
 import { SUBSCRIPTION_FEATURES } from '../config/subscriptionPlans';
+import { productService } from '../services/productService';
+import { orderService } from '../services/orderService';
 
 const SellerDashboard = () => {
-  const { token, activePlan, hasFeature } = useAuth();
+  const { activePlan, hasFeature } = useAuth();
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalOrders: 0,
@@ -16,6 +17,7 @@ const SellerDashboard = () => {
     pendingOrders: 0
   });
   const [products, setProducts] = useState([]);
+  const [planUsage, setPlanUsage] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,20 +27,25 @@ const SellerDashboard = () => {
 
   const fetchSellerData = async () => {
     try {
-      const [statsRes, productsRes, ordersRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/seller/stats', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get('http://localhost:5000/api/seller/products', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get('http://localhost:5000/api/seller/orders', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ]);
-      setStats(statsRes.data);
-      setProducts(productsRes.data.products);
-      setRecentOrders(ordersRes.data.orders);
+      const productsRes = await productService.getMyProducts({ page: 1, limit: 20 });
+      const myProducts = productsRes?.data || [];
+      const usage = productsRes?.planUsage || null;
+      const ordersRes = await orderService.getAll({ role: 'seller', page: 1, limit: 10 });
+      const sellerOrders = ordersRes?.data || [];
+      const totalRevenue = sellerOrders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+      const pendingOrders = sellerOrders.filter((o) =>
+        ['pending_payment', 'payment_escrowed', 'processing', 'dispatched'].includes(o.status)
+      ).length;
+
+      setProducts(myProducts);
+      setPlanUsage(usage);
+      setStats({
+        totalProducts: usage?.totalProducts ?? myProducts.length,
+        totalOrders: Number(ordersRes?.pagination?.total || sellerOrders.length),
+        totalRevenue,
+        pendingOrders,
+      });
+      setRecentOrders(sellerOrders.slice(0, 5));
     } catch (error) {
       console.error('Error fetching seller data:', error);
     } finally {
@@ -49,9 +56,7 @@ const SellerDashboard = () => {
   const handleDeleteProduct = async (productId) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${productId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await productService.delete(productId);
         fetchSellerData();
       } catch (error) {
         console.error('Error deleting product:', error);
@@ -90,6 +95,27 @@ const SellerDashboard = () => {
     },
   ];
   const canManageInventory = hasFeature(SUBSCRIPTION_FEATURES.INVENTORY_LEDGER);
+  const lowStockItems = products.filter((p) => {
+    const stock = Number(p.quantityAvailable ?? p.stock ?? 0);
+    const threshold = Number(p.minThreshold ?? 0);
+    return threshold > 0 && stock <= threshold;
+  });
+  const daysToExpiry = (dateValue) => {
+    if (!dateValue) return null;
+    const now = new Date();
+    const end = new Date(dateValue);
+    const diffMs = end.getTime() - now.getTime();
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  };
+  const expiringSoonItems = products.filter((p) => {
+    const expiry = p?.attributes?.expiry;
+    const days = daysToExpiry(expiry);
+    return typeof days === 'number' && days >= 0 && days <= 14;
+  });
+  const cfoEstimatedExpenses = stats.totalRevenue * 0.28;
+  const cfoNetProfit = stats.totalRevenue - cfoEstimatedExpenses;
+  const cfoMargin = stats.totalRevenue > 0 ? (cfoNetProfit / stats.totalRevenue) * 100 : 0;
+  const healthState = cfoMargin > 20 ? 'Green' : cfoMargin >= 0 ? 'Yellow' : 'Red';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -99,6 +125,11 @@ const SellerDashboard = () => {
           {activePlan && (
             <p className="text-sm text-gray-600 mt-1">
               Active tier: <span className="font-semibold">{activePlan.name}</span> ({activePlan.priceLabel})
+            </p>
+          )}
+          {planUsage && (
+            <p className="text-sm text-gray-600 mt-1">
+              Product slots: <span className="font-semibold">{planUsage.visibleProducts}</span> / {planUsage.productLimit}
             </p>
           )}
         </div>
@@ -154,6 +185,52 @@ const SellerDashboard = () => {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Digital CFO Health Meter</h2>
+          <div className="mb-3 text-sm text-gray-600">Frontend estimate using current seller revenue</div>
+          <div className="text-3xl font-bold mb-2">{formatCurrency(cfoNetProfit)}</div>
+          <div className="w-full h-3 rounded-full bg-gray-200 overflow-hidden mb-2">
+            <div
+              className={`h-full ${healthState === 'Green' ? 'bg-green-500' : healthState === 'Yellow' ? 'bg-yellow-500' : 'bg-red-500'}`}
+              style={{ width: `${Math.min(100, Math.max(5, Math.abs(cfoMargin)))}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-700">
+            Status: <span className="font-semibold">{healthState}</span> ({cfoMargin.toFixed(1)}% margin)
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Formula preview: Revenue - estimated OPEX/CAPEX/Comms
+          </p>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Alerts (Scarcity + Expiry)</h2>
+          {lowStockItems.length === 0 && expiringSoonItems.length === 0 ? (
+            <p className="text-gray-500">No active alerts right now.</p>
+          ) : (
+            <div className="space-y-3">
+              {lowStockItems.slice(0, 4).map((item) => (
+                <div key={`low-${item.id || item._id}`} className="rounded border border-red-200 bg-red-50 p-3">
+                  <p className="font-semibold text-red-700">{item.name}</p>
+                  <p className="text-sm text-red-600">
+                    Stock {Number(item.quantityAvailable ?? item.stock ?? 0)} is at/below threshold {Number(item.minThreshold)}
+                  </p>
+                </div>
+              ))}
+              {expiringSoonItems.slice(0, 4).map((item) => (
+                <div key={`exp-${item.id || item._id}`} className="rounded border border-yellow-200 bg-yellow-50 p-3">
+                  <p className="font-semibold text-yellow-700">{item.name}</p>
+                  <p className="text-sm text-yellow-700">
+                    Expires in {daysToExpiry(item?.attributes?.expiry)} day(s)
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       
@@ -220,15 +297,16 @@ const SellerDashboard = () => {
               </thead>
               <tbody>
                 {recentOrders.map((order) => (
-                  <tr key={order.id} className="border-b">
-                    <td className="py-3">#{order.id.slice(-8)}</td>
-                    <td>{order.customer?.name}</td>
-                    <td>{formatCurrency(order.total)}</td>
+                  <tr key={order.id || order._id} className="border-b">
+                    <td className="py-3">#{String(order.id || order._id).slice(-8)}</td>
+                    <td>{order.buyer?.fullName || 'N/A'}</td>
+                    <td>{formatCurrency(order.totalAmount)}</td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs ${
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'pending_payment' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'payment_escrowed' ? 'bg-blue-100 text-blue-800' :
                         order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                        order.status === 'dispatched' ? 'bg-purple-100 text-purple-800' :
                         'bg-green-100 text-green-800'
                       }`}>
                         {order.status}
@@ -236,7 +314,7 @@ const SellerDashboard = () => {
                     </td>
                     <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                     <td>
-                      <Link to={`/seller/orders/${order.id}`} className="text-primary hover:underline">
+                      <Link to={`/seller/orders`} className="text-primary hover:underline">
                         View
                       </Link>
                     </td>
@@ -270,17 +348,17 @@ const SellerDashboard = () => {
                 <div className="p-4">
                   <h3 className="font-semibold mb-2">{product.name}</h3>
                   <p className="text-primary font-bold mb-2">{formatCurrency(product.price)}</p>
-                  <p className="text-sm text-gray-500 mb-3">Stock: {product.stock}</p>
+                  <p className="text-sm text-gray-500 mb-3">Stock: {product.quantityAvailable ?? product.stock ?? 0}</p>
                   <div className="flex space-x-2">
                     <Link
-                      to={`/seller/edit-product/${product.id}`}
+                      to={`/seller/edit-product/${product.id || product._id}`}
                       className="flex-1 btn-secondary text-center text-sm py-1 flex items-center justify-center space-x-1"
                     >
                       <FaEdit />
                       <span>Edit</span>
                     </Link>
                     <button
-                      onClick={() => handleDeleteProduct(product.id)}
+                      onClick={() => handleDeleteProduct(product.id || product._id)}
                       className="flex-1 bg-red-500 text-white py-1 rounded-lg hover:bg-red-600 transition flex items-center justify-center space-x-1"
                     >
                       <FaTrash />

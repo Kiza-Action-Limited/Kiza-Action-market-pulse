@@ -1,60 +1,63 @@
 // src/pages/AdminUsers.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
+import api from '../config/axios';
 import { FaSearch, FaBan, FaCheckCircle, FaUsers, FaStore, FaUserTie, FaUser, FaBrain, FaFilter } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { mockAdminUsers } from '../data/mockData';
-import { disableMockData, isMockDataEnabled } from '../utils/mockDataControl';
 
 const AdminUsers = () => {
-  const { token } = useAuth();
+  const [searchParams] = useSearchParams();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [filter, setFilter] = useState(searchParams.get('role') || 'all');
+  const sellerTypeCategories = ['wholesaler', 'farmer', 'retailer', 'manufacturer', 'other_business'];
+  const formatCategoryLabel = (value) =>
+    String(value || '')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const getUserCategory = (user) => {
+    const role = String(user?.role || '').toLowerCase();
+    const businessType = String(user?.businessType || '').toLowerCase();
+    if (sellerTypeCategories.includes(role)) return role;
+    if (sellerTypeCategories.includes(businessType)) return businessType;
+    if (role === 'seller') return 'other_business';
+    if (role === 'buyer' || role === 'consumer' || businessType === 'consumer') return 'consumer';
+    return role || businessType || 'unknown';
+  };
+
+  const getDisplayCategory = (user) => {
+    if (String(user?.role || '').toLowerCase() === 'admin') return 'admin';
+    return getUserCategory(user);
+  };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    const roleFromUrl = searchParams.get('role');
+    if (roleFromUrl) setFilter(roleFromUrl);
+  }, [searchParams]);
+
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers(response.data.users);
-      setUsingMockData(false);
+      const response = await api.get('/v1/admin/users');
+      const allUsers = response.data.users || [];
+      const nonAdminUsers = allUsers.filter((u) => String(u?.role || '').toLowerCase() !== 'admin');
+      setUsers(nonAdminUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
-      if (isMockDataEnabled()) {
-        setUsers(mockAdminUsers);
-        setUsingMockData(true);
-        toast.success('Showing mock users for UI appearance');
-      } else {
-        toast.error('Failed to load users');
-      }
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
   };
 
   const handleBlockUser = async (userId, block) => {
-    if (usingMockData) {
-      setUsers((prev) =>
-        prev.map((user) => (user.id === userId ? { ...user, isBlocked: block } : user))
-      );
-      toast.success(block ? 'Mock user blocked' : 'Mock user unblocked');
-      return;
-    }
-
     try {
-      await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/block`,
-        { block },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put(`/v1/admin/users/${userId}`, { isBlocked: block });
       toast.success(block ? 'User blocked' : 'User unblocked');
       fetchUsers();
     } catch (error) {
@@ -62,20 +65,13 @@ const AdminUsers = () => {
     }
   };
 
-  const removeMockData = () => {
-    disableMockData();
-    setUsingMockData(false);
-    setUsers([]);
-    toast.success('Mock data disabled. Admin can switch to real backend data anytime.');
-  };
-
   // Calculate statistics
   const stats = {
     total: users.length,
     active: users.filter(u => !u.isBlocked).length,
     blocked: users.filter(u => u.isBlocked).length,
-    buyers: users.filter(u => u.role === 'buyer').length,
-    sellers: users.filter(u => u.role === 'seller').length,
+    consumers: users.filter(u => getUserCategory(u) === 'consumer').length,
+    sellers: users.filter(u => sellerTypeCategories.includes(getUserCategory(u))).length,
     admins: users.filter(u => u.role === 'admin').length,
   };
 
@@ -85,19 +81,23 @@ const AdminUsers = () => {
     const matchesFilter = filter === 'all' || 
                          (filter === 'active' && !user.isBlocked) ||
                          (filter === 'blocked' && user.isBlocked) ||
-                         (filter === user.role);
+                         (filter === user.role) ||
+                         (filter === getDisplayCategory(user)) ||
+                         (filter === getUserCategory(user));
     return matchesSearch && matchesFilter;
   });
 
-  const getRoleIcon = (role) => {
-    switch (role) {
-      case 'admin':
-        return <FaUserTie className="text-[#FB923C]" />;
-      case 'seller':
-        return <FaStore className="text-[#F97316]" />;
-      default:
-        return <FaUser className="text-[#16A34A]" />;
-    }
+  const getDisplayRole = (user) => {
+    const category = getDisplayCategory(user);
+    if (sellerTypeCategories.includes(category)) return 'seller';
+    if (category === 'consumer') return 'consumer';
+    return category;
+  };
+
+  const getRoleIcon = (displayRole) => {
+    if (displayRole === 'seller') return <FaStore className="text-[#F97316]" />;
+    if (displayRole === 'admin') return <FaUserTie className="text-[#FB923C]" />;
+    return <FaUser className="text-[#16A34A]" />;
   };
 
   if (loading) {
@@ -120,23 +120,6 @@ const AdminUsers = () => {
           <p className="text-[#6B7280]">Lango Lako la Biashara Smart — Manage platform users and their access</p>
         </div>
 
-        {usingMockData && (
-          <div className="mb-6 rounded-xl border border-[#F97316]/30 bg-[#F97316]/10 p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FaBrain className="text-[#F97316]" />
-              <p className="text-[#111827] text-sm">
-                <span className="font-semibold text-[#F97316]">Mock Mode:</span> Users are shown for appearance only.
-              </p>
-            </div>
-            <button 
-              onClick={removeMockData} 
-              className="px-3 py-1.5 text-sm rounded-lg bg-[#F97316] text-white hover:bg-[#F97316]/90 transition-colors"
-            >
-              Remove Mock Data
-            </button>
-          </div>
-        )}
-        
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-[#F97316]">
@@ -152,16 +135,12 @@ const AdminUsers = () => {
             <p className="text-2xl font-bold text-[#F97316]">{stats.blocked}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-[#16A34A]">
-            <p className="text-[#6B7280] text-xs uppercase tracking-wide">Buyers</p>
-            <p className="text-2xl font-bold text-[#16A34A]">{stats.buyers}</p>
+            <p className="text-[#6B7280] text-xs uppercase tracking-wide">Consumers</p>
+            <p className="text-2xl font-bold text-[#16A34A]">{stats.consumers}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-[#F97316]">
             <p className="text-[#6B7280] text-xs uppercase tracking-wide">Sellers</p>
             <p className="text-2xl font-bold text-[#F97316]">{stats.sellers}</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-[#FB923C]">
-            <p className="text-[#6B7280] text-xs uppercase tracking-wide">Admins</p>
-            <p className="text-2xl font-bold text-[#FB923C]">{stats.admins}</p>
           </div>
         </div>
         
@@ -191,9 +170,12 @@ const AdminUsers = () => {
                 <option value="all">All Users</option>
                 <option value="active">Active</option>
                 <option value="blocked">Blocked</option>
-                <option value="buyer">Buyers</option>
-                <option value="seller">Sellers</option>
-                <option value="admin">Admins</option>
+                <option value="consumer">Consumers</option>
+                <option value="wholesaler">Wholesalers</option>
+                <option value="farmer">Farmers</option>
+                <option value="retailer">Retailers</option>
+                <option value="manufacturer">Manufacturers</option>
+                <option value="other_business">Other Business</option>
               </select>
             </div>
           </div>
@@ -231,7 +213,7 @@ const AdminUsers = () => {
               </thead>
               <tbody>
                 {filteredUsers.map((user, index) => (
-                  <tr key={user.id} className={`border-t border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
+                  <tr key={user._id || user.id} className={`border-t border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-linear-to-br from-[#F97316] to-[#FB923C] rounded-full flex items-center justify-center text-white font-bold shadow-sm">
@@ -243,17 +225,19 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 text-[#6B7280]">{user.email}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        {getRoleIcon(user.role)}
+                        {getRoleIcon(getDisplayRole(user))}
                         <span className={`capitalize ${
-                          user.role === 'admin' ? 'text-[#FB923C] font-medium' :
-                          user.role === 'seller' ? 'text-[#F97316] font-medium' :
+                          getDisplayRole(user) === 'admin' ? 'text-[#FB923C] font-medium' :
+                          getDisplayRole(user) === 'seller' ? 'text-[#F97316] font-medium' :
                           'text-[#16A34A]'
                         }`}>
-                          {user.role}
+                          {formatCategoryLabel(getDisplayRole(user))}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[#6B7280]">{user.businessType || '-'}</td>
+                    <td className="px-6 py-4 text-[#6B7280] capitalize">
+                      {formatCategoryLabel(getUserCategory(user))}
+                    </td>
                     <td className="px-6 py-4 text-[#6B7280] text-sm">
                       {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                     </td>
@@ -268,7 +252,7 @@ const AdminUsers = () => {
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => handleBlockUser(user.id, !user.isBlocked)}
+                        onClick={() => handleBlockUser(user._id || user.id, !user.isBlocked)}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 transition-colors ${
                           user.isBlocked 
                             ? 'bg-[#16A34A] text-white hover:bg-[#16A34A]/90' 

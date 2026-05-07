@@ -8,13 +8,25 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add token
+// Request interceptor to add token and support FormData uploads
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    config.headers = config.headers || {};
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (config.data instanceof FormData) {
+      // Let the browser set the correct multipart boundary header.
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+      if (config.headers?.common) {
+        delete config.headers.common['Content-Type'];
+        delete config.headers.common['content-type'];
+      }
+    }
+
     return config;
   },
   (error) => {

@@ -47,6 +47,7 @@ import SellerDashboard from './pages/SellerDashboard';
 import AddProduct from './pages/AddProduct';
 import EditProduct from './pages/EditProduct';
 import SellerOrders from './pages/SellerOrders';
+import RegionalScarcityBoard from './pages/RegionalScarcityBoard';
 import SellerPremiumVerification from './pages/SellerPremiumVerification';
 import SellerPremiumPayment from './pages/SellerPremiumPayment';
 
@@ -57,17 +58,16 @@ import AdminCategories from './pages/AdminCategories';
 import AdminOrders from './pages/AdminOrders';
 import AdminProducts from './pages/AdminProducts';
 import AdminContactQueue from './pages/AdminContactQueue';
+import AdminAnalytics from './pages/AdminAnalytics';
+import AdminProfile from './pages/AdminProfile';
+import AdminLogistics from './pages/AdminLogistics';
 
-// Subscription Guards
-import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { SubscriptionPayment } from './pages/SubscriptionPayment'; // optional separate payment page
 
 // Protected Routes
 import ProtectedRoute from './components/ProtectedRoute';
 import SellerRoute from './components/SellerRoute';
 import AdminRoute from './components/AdminRoute';
-import SubscriptionGate from './components/SubscriptionGate';
-import { SUBSCRIPTION_FEATURES } from './config/subscriptionPlans';
 
 function App() {
   return (
@@ -111,30 +111,20 @@ function App() {
                       <Route path="wishlist" element={<Wishlist />} />
                     </Route>
                     
-                    {/* Seller Routes - with subscription guard */}
+                    {/* Seller Routes */}
                     <Route element={<SellerRoute />}>
                       <Route path="seller" element={<SellerLayout />}>
-                        {/* These two are accessible without active subscription (plan selection & payment) */}
+                        <Route index element={<SellerDashboard />} />
+                        <Route path="home" element={<Home />} />
+                        <Route path="add-product" element={<AddProduct />} />
+                        <Route path="edit-product/:id" element={<EditProduct />} />
+                        <Route path="products" element={<SellerDashboard />} />
+                        <Route path="orders" element={<SellerOrders />} />
+                        <Route path="profile" element={<Profile />} />
+                        <Route path="scarcity-board" element={<RegionalScarcityBoard />} />
                         <Route path="subscription-plans" element={<SubscriptionPlans />} />
                         <Route path="premium-payment" element={<SellerPremiumPayment />} />
                         <Route path="premium-verification" element={<SellerPremiumVerification />} />
-
-                        {/* All other seller routes require an active subscription */}
-                        <Route element={<SubscriptionGuard />}>
-                          <Route index element={<SellerDashboard />} />
-                          <Route
-                            element={<SubscriptionGate requiredFeatures={[SUBSCRIPTION_FEATURES.INVENTORY_LEDGER]} />}
-                          >
-                            <Route path="add-product" element={<AddProduct />} />
-                            <Route path="edit-product/:id" element={<EditProduct />} />
-                            <Route path="products" element={<SellerDashboard />} />
-                          </Route>
-                          <Route
-                            element={<SubscriptionGate requiredFeatures={[SUBSCRIPTION_FEATURES.ESCROW_CLIENT]} />}
-                          >
-                            <Route path="orders" element={<SellerOrders />} />
-                          </Route>
-                        </Route>
                       </Route>
                     </Route>
                     
@@ -146,7 +136,10 @@ function App() {
                         <Route path="categories" element={<AdminCategories />} />
                         <Route path="orders" element={<AdminOrders />} />
                         <Route path="products" element={<AdminProducts />} />
+                        <Route path="analytics" element={<AdminAnalytics />} />
+                        <Route path="logistics" element={<AdminLogistics />} />
                         <Route path="contact-queue" element={<AdminContactQueue />} />
+                        <Route path="profile" element={<AdminProfile />} />
                       </Route>
                     </Route>
                     

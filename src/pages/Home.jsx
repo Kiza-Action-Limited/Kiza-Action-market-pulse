@@ -1,23 +1,14 @@
 ﻿// src/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import ProductCard from '../components/ProductCard';
-import UnimartStyleShowcase from '../components/UnimartStyleShowcase';
+import { productService } from '../services/productService';
+import UnimartStyleShowcase from '../components/MarketPulseShowcase';
 import { FaTruck, FaShieldAlt, FaMoneyBillWave, FaHeadset, FaBrain, FaChartLine, FaBell, FaStore } from 'react-icons/fa';
-import { mockFeaturedProducts, mockCategories } from '../data/mockData';
-import { isMockDataEnabled } from '../utils/mockDataControl';
-import logoOne from '../assets/images/240_F_736429436_NpVWpeNSbzAx35soBFulMc5N4MUO30NV.jpg';
-import logoTwo from '../assets/images/240_F_776244896_NIuzw0tcKboL3mSK3e4IQPfTG8ke7dVz.jpg';
-import logoThree from '../assets/images/240_F_625149818_UZoQ4cgXZWezaqXn1Lft1Ryl3F9nPk6C.jpg';
-import logoFour from '../assets/images/240_F_604241136_FOmFpXlpfZRzhhNvmsuGxXjKwGD6F2oO.jpg';
-import logoFive from '../assets/images/240_F_313598127_M2n9aSAYVsfYuSSVytPuYpLAwSEp5lxH.jpg';
-import logoSix from '../assets/images/240_F_521305037_VDbElIduqlaQVq1QCOqf3cBwHayGASrD.jpg';
-import logoSeven from '../assets/images/240_F_1727631229_Jvja9SE3o82p1C7Io8pDek06qHddbyp8.jpg';
-import logoEight from '../assets/images/240_F_1671818644_Ddbso43PyJfSVubnXaL7rmXfRww6Dkjz.jpg';
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [businessPartners, setBusinessPartners] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,18 +17,35 @@ const Home = () => {
 
   const fetchHomeData = async () => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/products/featured'),
-        axios.get('http://localhost:5000/api/categories')
-      ]);
-      setFeaturedProducts(productsRes.data.products);
-      setCategories(categoriesRes.data.categories);
+      // Load featured items from the public products endpoint used by the backend.
+      const productsRes = await productService.getAll({ page: 1, limit: 8, sortBy: 'newest' });
+      const liveProducts = productsRes?.products || [];
+      setFeaturedProducts(liveProducts);
+      const categorySet = Array.from(new Set(liveProducts.map((item) => item?.category).filter(Boolean)));
+      setCategories(categorySet.map((name) => ({ id: name, name })));
+
+      const sellersRes = await productService.getAll({ page: 1, limit: 120, sortBy: 'newest' });
+      const sellerProducts = sellersRes?.products || [];
+      const bySeller = new Map();
+
+      sellerProducts.forEach((product) => {
+        const seller = product?.seller;
+        const sellerId = seller?.id || seller?._id;
+        const sellerName = seller?.businessName || seller?.fullName || seller?.name;
+        const logo = seller?.businessLogoUrl;
+
+        if (!sellerId || !sellerName || !logo) return;
+        if (!bySeller.has(String(sellerId))) {
+          bySeller.set(String(sellerId), { id: String(sellerId), name: sellerName, logo });
+        }
+      });
+
+      setBusinessPartners(Array.from(bySeller.values()));
     } catch (error) {
       console.error('Error fetching home data:', error);
-      if (isMockDataEnabled()) {
-        setFeaturedProducts(mockFeaturedProducts);
-        setCategories(mockCategories);
-      }
+      setFeaturedProducts([]);
+      setCategories([]);
+      setBusinessPartners([]);
     } finally {
       setLoading(false);
     }
@@ -55,18 +63,7 @@ const Home = () => {
     { icon: FaChartLine, title: 'Profit Indicators', desc: 'Real-time growth tracking', color: '#16A34A' },
     { icon: FaBell, title: 'Smart Alerts', desc: 'Instant notifications on opportunities', color: '#F97316' },
   ];
-  const businessLogos = [
-    { name: 'Lango Brands Hub', src: logoOne },
-    { name: 'Trusted Wholesaler Co', src: logoTwo },
-    { name: 'MakerWorks Africa', src: logoThree },
-    { name: 'Retail Connect KE', src: logoFour },
-    { name: 'Farm Fresh Link', src: logoFive },
-    { name: 'Smart Small Biz', src: logoSix },
-    { name: 'Pulse Trade Group', src: logoSeven },
-    { name: 'Campus Seller Network', src: logoEight },
-  ];
-
-  const marqueeLogos = [...businessLogos, ...businessLogos];
+  const marqueeLogos = [...businessPartners, ...businessPartners];
 
   return (
     <div className="bg-[#F9FAFB]">
@@ -92,10 +89,10 @@ const Home = () => {
       </section>
 
       {/* Lango MarketPulse Intelligence Banner */}
-      <section className="py-8 bg-linear-to-r from-[#F97316] to-[#FB923C]">
+      <section className="py-8 bg-linear-to-r from-[#111827] to-[#111827]">
         <div className="container mx-auto px-4 text-center">
           <p className="text-white/90 text-sm md:text-base font-medium">
-            âš¡ <span className="font-bold">Lango MarketPulse Trade & Intelligence OS</span> â€” 
+            <span className="font-bold">Lango MarketPulse Trade & Intelligence OS</span>
             AI-powered insights meet seamless commerce. <span className="text-[#F97316]">Lango Lako la Biashara Smart</span>
           </p>
         </div>
@@ -122,6 +119,7 @@ const Home = () => {
       
 
       {/* AI Intelligence Section */}
+
       <section className="py-16 bg-linear-to-br from-[#FB923C]/5 to-[#F97316]/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
@@ -146,6 +144,7 @@ const Home = () => {
       </section>
 
       {/* Verified business sourcing entry */}
+
       <section className="py-14 bg-[#F3F4F6]">
         <div className="container mx-auto px-4">
           <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8">
@@ -215,21 +214,32 @@ const Home = () => {
             </p>
           </div>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-[#F9FAFB] py-5">
-            <div className="logo-marquee-track">
-              {marqueeLogos.map((logo, index) => (
-                <div key={`${logo.name}-${index}`} className="logo-marquee-item hover-card-soft">
-                  <img
-                    src={logo.src}
-                    alt={logo.name}
-                    className="h-14 w-14 md:h-16 md:w-16 rounded-full object-cover border border-gray-200"
-                    loading="lazy"
-                  />
-                  <p className="text-xs md:text-sm font-semibold text-[#374151] mt-2 text-center line-clamp-2 min-h-[2.5rem]">
-                    {logo.name}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {marqueeLogos.length > 0 ? (
+              <div className="logo-marquee-track">
+                {marqueeLogos.map((logo, index) => (
+                  <Link
+                    key={`${logo.id}-${index}`}
+                    to={`/businesses/${logo.id}`}
+                    className="logo-marquee-item hover-card-soft"
+                    aria-label={`View ${logo.name} business profile`}
+                  >
+                    <img
+                      src={logo.logo}
+                      alt={logo.name}
+                      className="h-14 w-14 md:h-16 md:w-16 rounded-full object-cover border border-gray-200"
+                      loading="lazy"
+                    />
+                    <p className="text-xs md:text-sm font-semibold text-[#374151] mt-2 text-center line-clamp-2 min-h-10">
+                      {logo.name}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-sm text-[#6B7280] px-4">
+                No seller logos yet. Registered sellers with uploaded logos will appear here automatically.
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -263,4 +273,3 @@ const Home = () => {
 };
 
 export default Home;
-

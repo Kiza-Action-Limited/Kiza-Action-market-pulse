@@ -42,13 +42,62 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('guest_cart', JSON.stringify(items));
   };
 
+  const isCartRouteMissing = (error) =>
+    error?.response?.status === 404 &&
+    String(error?.response?.data?.message || '').toLowerCase().includes('route not found');
+
+  const addToLocalCart = async (productId, quantity, variant, productMeta = null) => {
+    const existingItemIndex = cartItems.findIndex(
+      item => item.productId === productId && JSON.stringify(item.variant) === JSON.stringify(variant)
+    );
+
+    let newCart;
+    if (existingItemIndex !== -1) {
+      newCart = [...cartItems];
+      newCart[existingItemIndex].quantity += quantity;
+    } else {
+      let product = productMeta;
+      if (!product) {
+        const productResponse = await fetch(`http://localhost:5000/api/v1/products/${productId}`);
+        const responseBody = await productResponse.json();
+        product = responseBody?.product || responseBody?.data || responseBody;
+      }
+
+      const itemMinimumOrderQty = getMinimumOrderQuantity(product);
+      const itemQuantity = clampToMinimumOrder(quantity, itemMinimumOrderQty);
+      const itemStock = Number(product?.stock ?? product?.quantityAvailable ?? 0);
+
+      newCart = [...cartItems, {
+        id: Date.now(),
+        productId,
+        name: product?.name,
+        price: product?.price,
+        image: product?.images?.[0],
+        quantity: itemQuantity,
+        variant,
+        stock: itemStock,
+        seller: product?.seller,
+        minOrderQuantity: itemMinimumOrderQty,
+        mqqTiers: itemMinimumOrderQty > 1 ? MQQ_TIERS : undefined,
+      }];
+    }
+
+    setCartItems(newCart);
+    saveGuestCart(newCart);
+    toast.success('Added to cart');
+  };
+
   const fetchCart = async () => {
     try {
       setLoading(true);
       const response = await cartService.getCart();
       setCartItems(response.items);
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      if (isCartRouteMissing(error)) {
+        loadGuestCart();
+      } else {
+        console.error('Error fetching cart:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -63,47 +112,11 @@ export const CartProvider = ({ children }) => {
     }
 
     if (!isAuthenticated) {
-      // Guest cart logic
-      const existingItemIndex = cartItems.findIndex(
-        item => item.productId === productId && JSON.stringify(item.variant) === JSON.stringify(variant)
-      );
-      
-      let newCart;
-      if (existingItemIndex !== -1) {
-        newCart = [...cartItems];
-        newCart[existingItemIndex].quantity += safeQuantity;
-      } else {
-        // Fetch product details for guest cart
-        try {
-          const productResponse = await fetch(`http://localhost:5000/api/products/${productId}`);
-          const responseBody = await productResponse.json();
-          const product = responseBody?.product || responseBody?.data || responseBody;
-          const itemMinimumOrderQty = getMinimumOrderQuantity(product);
-          const itemQuantity = clampToMinimumOrder(safeQuantity, itemMinimumOrderQty);
-          const itemStock = Number(product?.stock ?? product?.quantityAvailable ?? 0);
-
-          newCart = [...cartItems, {
-            id: Date.now(),
-            productId,
-            name: product?.name,
-            price: product?.price,
-            image: product?.images?.[0],
-            quantity: itemQuantity,
-            variant,
-            stock: itemStock,
-            seller: product?.seller,
-            minOrderQuantity: itemMinimumOrderQty,
-            mqqTiers: itemMinimumOrderQty > 1 ? MQQ_TIERS : undefined,
-          }];
-        } catch (error) {
-          toast.error('Failed to add to cart');
-          return;
-        }
+      try {
+        await addToLocalCart(productId, safeQuantity, variant, productMeta);
+      } catch (error) {
+        toast.error('Failed to add to cart');
       }
-      
-      setCartItems(newCart);
-      saveGuestCart(newCart);
-      toast.success('Added to cart');
       return;
     }
 
@@ -113,7 +126,15 @@ export const CartProvider = ({ children }) => {
       setCartItems(response.items);
       toast.success('Added to cart');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add to cart');
+      if (isCartRouteMissing(error)) {
+        try {
+          await addToLocalCart(productId, safeQuantity, variant, productMeta);
+        } catch (localError) {
+          toast.error('Failed to add to cart');
+        }
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to add to cart');
+      }
     } finally {
       setLoading(false);
     }
@@ -142,7 +163,15 @@ export const CartProvider = ({ children }) => {
       const response = await cartService.updateQuantity(itemId, safeQuantity);
       setCartItems(response.items);
     } catch (error) {
-      toast.error('Failed to update cart');
+      if (isCartRouteMissing(error)) {
+        const newCart = cartItems.map(item =>
+          (item.id === itemId || item._id === itemId) ? { ...item, quantity: safeQuantity } : item
+        );
+        setCartItems(newCart);
+        saveGuestCart(newCart);
+      } else {
+        toast.error('Failed to update cart');
+      }
     } finally {
       setLoading(false);
     }
@@ -163,7 +192,14 @@ export const CartProvider = ({ children }) => {
       setCartItems(response.items);
       toast.success('Removed from cart');
     } catch (error) {
-      toast.error('Failed to remove from cart');
+      if (isCartRouteMissing(error)) {
+        const newCart = cartItems.filter(item => item.id !== itemId && item._id !== itemId);
+        setCartItems(newCart);
+        saveGuestCart(newCart);
+        toast.success('Removed from cart');
+      } else {
+        toast.error('Failed to remove from cart');
+      }
     } finally {
       setLoading(false);
     }
@@ -180,7 +216,12 @@ export const CartProvider = ({ children }) => {
       await cartService.clearCart();
       setCartItems([]);
     } catch (error) {
-      toast.error('Failed to clear cart');
+      if (isCartRouteMissing(error)) {
+        setCartItems([]);
+        saveGuestCart([]);
+      } else {
+        toast.error('Failed to clear cart');
+      }
     }
   };
 

@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { mockAdminProducts, mockAdminUsers, mockCategories } from '../data/mockData';
-import { mockBusinessSuppliers } from '../data/mockBusinessNetwork';
 import { manufacturerService } from '../services/manufacturerService';
-import { isMockDataEnabled } from '../utils/mockDataControl';
 import { buildSupplierCards } from '../utils/manufacturerMapper';
 import { getPremiumProfiles } from '../utils/premiumSellerProfile';
 import { mergeSupplierPredictions, predictSuppliersLocal } from '../utils/supplierPrediction';
@@ -28,6 +25,7 @@ export const useRealtimeManufacturers = () => {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sourceMode, setSourceMode] = useState('api');
@@ -43,7 +41,8 @@ export const useRealtimeManufacturers = () => {
       const data = await manufacturerService.getMarketplaceData();
       setCategories(data.categories);
       setProducts(data.products);
-      setUsers(mockAdminUsers);
+      setBusinesses(Array.isArray(data.businesses) ? data.businesses : []);
+      setUsers([]);
       setPremiumProfiles(getPremiumProfiles());
       setSourceMode('api');
       setLastSyncedAt(new Date().toISOString());
@@ -54,17 +53,15 @@ export const useRealtimeManufacturers = () => {
         setHeaderConfig(null);
       }
     } catch (error) {
-      if (isMockDataEnabled()) {
-        setCategories(mockCategories);
-        setProducts(mockAdminProducts);
-        setUsers(mockAdminUsers);
-        setPremiumProfiles(getPremiumProfiles());
-        setSourceMode('mock');
-        setLastSyncedAt(new Date().toISOString());
-        setHeaderConfig(null);
-      } else {
-        throw error;
-      }
+      setCategories([]);
+      setProducts([]);
+      setBusinesses([]);
+      setUsers([]);
+      setPremiumProfiles(getPremiumProfiles());
+      setSourceMode('api');
+      setLastSyncedAt(new Date().toISOString());
+      setHeaderConfig(null);
+      console.error('Error loading realtime manufacturers:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -92,16 +89,11 @@ export const useRealtimeManufacturers = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const baseSuppliers = useMemo(() => buildSupplierCards(products, users, premiumProfiles), [products, users, premiumProfiles]);
-  const mergedSuppliers = useMemo(() => {
-    if (!isMockDataEnabled()) return baseSuppliers;
-    if (!baseSuppliers.length || baseSuppliers.length < 8) {
-      const existingNames = new Set(baseSuppliers.map((supplier) => supplier.name.toLowerCase()));
-      const additional = mockBusinessSuppliers.filter((supplier) => !existingNames.has(supplier.name.toLowerCase()));
-      return [...baseSuppliers, ...additional].map(withOrderTerms);
-    }
-    return baseSuppliers.map(withOrderTerms);
-  }, [baseSuppliers]);
+  const baseSuppliers = useMemo(
+    () => buildSupplierCards(products, users, premiumProfiles, businesses),
+    [products, users, premiumProfiles, businesses]
+  );
+  const mergedSuppliers = useMemo(() => baseSuppliers.map(withOrderTerms), [baseSuppliers]);
 
   const getSuppliersWithPrediction = useCallback(
     async (query = '') => {

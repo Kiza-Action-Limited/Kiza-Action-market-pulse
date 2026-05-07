@@ -27,6 +27,17 @@ const formatDateTime = (value) => {
   return date.toLocaleString();
 };
 
+const deliverContactPayload = async (payload) => {
+  try {
+    return await api.post('/v1/contact', payload);
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return api.post('/contact', payload);
+    }
+    throw error;
+  }
+};
+
 const AdminContactQueue = () => {
   const [queue, setQueue] = useState(readQueue());
   const [sendingId, setSendingId] = useState(null);
@@ -61,7 +72,7 @@ const AdminContactQueue = () => {
   const retrySingle = async (item) => {
     setSendingId(item.id);
     try {
-      await api.post('/contact', {
+      await deliverContactPayload({
         fullName: item.fullName,
         email: item.email,
         phone: item.phone,
@@ -77,7 +88,7 @@ const AdminContactQueue = () => {
       setQueue(updated);
       toast.success('Message delivered to backend');
     } catch (error) {
-      toast.error('Delivery failed. Queue item kept for retry.');
+      toast.error(error.response?.data?.message || 'Delivery failed. Queue item kept for retry.');
     } finally {
       setSendingId(null);
     }

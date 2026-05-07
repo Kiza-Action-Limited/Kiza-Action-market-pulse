@@ -20,7 +20,7 @@ const currencyOptions = [
 ];
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isSeller, isAdmin, logout } = useAuth();
   const { getCartCount } = useCart();
   const [query, setQuery] = useState('');
   const [currency, setCurrency] = useState(currencyOptions[0]);
@@ -95,6 +95,12 @@ const Navbar = () => {
                   {isAuthenticated ? (
                     <>
                       <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Profile</Link>
+                      {isSeller && (
+                        <Link to="/seller" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Seller Dashboard</Link>
+                      )}
+                      {isAdmin && (
+                        <Link to="/admin" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Admin Dashboard</Link>
+                      )}
                       <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Orders</Link>
                       <Link to="/wishlist" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Wishlist</Link>
                       <button onClick={handleAuthAction} className="w-full text-left px-4 py-2 hover:bg-gray-100">Sign out</button>
@@ -215,6 +221,12 @@ const Navbar = () => {
                 {isAuthenticated ? (
                   <>
                     <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Profile</Link>
+                    {isSeller && (
+                      <Link to="/seller" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Seller Dashboard</Link>
+                    )}
+                    {isAdmin && (
+                      <Link to="/admin" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Admin Dashboard</Link>
+                    )}
                     <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Orders</Link>
                     <Link to="/wishlist" className="block px-4 py-2 hover:bg-gray-100" onClick={closeAllMenus}>Wishlist</Link>
                     <button onClick={handleAuthAction} className="w-full text-left px-4 py-2 hover:bg-gray-100">Sign out</button>

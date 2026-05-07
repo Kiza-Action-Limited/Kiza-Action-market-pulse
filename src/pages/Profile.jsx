@@ -1,12 +1,13 @@
 // src/pages/Profile.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaStore, FaSave, FaBrain, FaShieldAlt, FaCrown } from 'react-icons/fa';
 
 const Profile = () => {
-  const { user, token, activePlan, availablePlans, switchPlan } = useAuth();
+  const { user, token, activePlan, availablePlans, switchPlan, isSeller } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -77,7 +78,7 @@ const Profile = () => {
           <p className="text-[#6B7280]">Lango Lako la Biashara Smart — Manage your account details</p>
         </div>
 
-        {activePlan && (
+        {activePlan && user?.role !== 'buyer' && (
           <div className="mb-6 bg-white rounded-xl shadow-md p-5 border border-[#F97316]/20">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
@@ -100,6 +101,25 @@ const Profile = () => {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+        )}
+
+        {isSeller && (
+          <div className="mb-6 bg-white rounded-xl shadow-md p-5 border border-[#16A34A]/20">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h3 className="font-semibold text-[#111827]">Seller Quick Access</h3>
+                <p className="text-sm text-[#6B7280] mt-1">
+                  Go to your dashboard to manage products, orders, and subscription.
+                </p>
+              </div>
+              <Link
+                to="/seller"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] text-white font-medium hover:bg-[#15803D] transition"
+              >
+                Open Seller Dashboard
+              </Link>
             </div>
           </div>
         )}
@@ -192,7 +212,7 @@ const Profile = () => {
               </div>
               
               {/* Business Type (for sellers) */}
-              {user?.role === 'seller' && (
+              {(user?.role === 'seller' || user?.role === 'farmer') && (
                 <div className="bg-[#F97316]/5 rounded-lg p-4 border border-[#F97316]/20">
                   <label className="text-sm font-medium mb-2 text-[#111827] flex items-center gap-2">
                     <FaStore className="text-[#F97316] text-sm" />

@@ -3,6 +3,10 @@ import { useAuth as useAuthContext } from '../context/AuthContext';
 
 export const useAuth = () => {
   const auth = useAuthContext();
+  const roleValue = String(auth.user?.role || '').toLowerCase();
+  const businessTypeValue = String(auth.user?.businessType || '').toLowerCase();
+  const sellerCategories = new Set(['seller', 'wholesaler', 'farmer', 'retailer', 'manufacturer']);
+  const buyerCategories = new Set(['buyer', 'consumer']);
   
   const hasRole = (role) => {
     return auth.user?.role === role;
@@ -13,7 +17,7 @@ export const useAuth = () => {
   };
   
   const isSeller = () => {
-    return auth.user?.role === 'seller' || auth.user?.role === 'farmer' || auth.user?.role === 'admin';
+    return auth.user?.role === 'admin' || sellerCategories.has(roleValue) || sellerCategories.has(businessTypeValue);
   };
   
   const isAdmin = () => {
@@ -21,7 +25,7 @@ export const useAuth = () => {
   };
   
   const isBuyer = () => {
-    return auth.user?.role === 'buyer';
+    return buyerCategories.has(roleValue) || buyerCategories.has(businessTypeValue);
   };
   
   const getBusinessType = () => {

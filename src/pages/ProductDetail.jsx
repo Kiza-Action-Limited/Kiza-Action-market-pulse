@@ -1,9 +1,10 @@
 // src/pages/ProductDetail.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { productService } from '../services/productService';
+import { userService } from '../services/userService';
 import { FaStar, FaStarHalfAlt, FaRegStar, FaShoppingCart, FaHeart, FaRegHeart, FaTruck, FaShieldAlt, FaUndo } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../utils/formatters';
@@ -30,11 +31,16 @@ const ProductDetail = () => {
   const fetchProduct = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/products/${id}`);
-      const fetchedProduct = response.data.product;
+      const productPayload = await productService.getById(id);
+      const fetchedProduct = productPayload?.product || productPayload?.data || productPayload;
+
+      if (!fetchedProduct) {
+        throw new Error('Missing product payload');
+      }
+
       setProduct(fetchedProduct);
       setQuantity(getMinimumOrderQuantity(fetchedProduct));
-      setReviews(response.data.reviews || []);
+      setReviews(productPayload?.reviews || []);
       if (isAuthenticated) {
         checkWishlist();
       }
@@ -49,10 +55,8 @@ const ProductDetail = () => {
 
   const checkWishlist = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/wishlist/check/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setIsWishlisted(response.data.isWishlisted);
+      const response = await userService.checkWishlist(id);
+      setIsWishlisted(Boolean(response?.isWishlisted));
     } catch (error) {
       console.error('Error checking wishlist:', error);
     }
@@ -96,20 +100,17 @@ const ProductDetail = () => {
 
     try {
       if (isWishlisted) {
-        await axios.delete(`http://localhost:5000/api/wishlist/${id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await userService.removeFromWishlist(id);
         setIsWishlisted(false);
         toast.success('Removed from wishlist');
       } else {
-        await axios.post(`http://localhost:5000/api/wishlist/${id}`, {}, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await userService.addToWishlist(id);
         setIsWishlisted(true);
         toast.success('Added to wishlist');
       }
     } catch (error) {
-      toast.error('Failed to update wishlist');
+      const message = error?.response?.data?.message || 'Failed to update wishlist';
+      toast.error(message);
     }
   };
 
@@ -122,16 +123,19 @@ const ProductDetail = () => {
     }
 
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/products/${id}/reviews`,
-        newReview,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setReviews([response.data.review, ...reviews]);
+      const response = await productService.addReview(id, newReview);
+      const createdReview = response?.review || response?.data?.review || response?.data || response;
+
+      if (!createdReview) {
+        throw new Error('Review was not returned by the API');
+      }
+
+      setReviews((prev) => [createdReview, ...prev]);
       setNewReview({ rating: 5, comment: '' });
       toast.success('Review submitted');
     } catch (error) {
-      toast.error('Failed to submit review');
+      const message = error?.response?.data?.message || 'Failed to submit review';
+      toast.error(message);
     }
   };
 
@@ -161,10 +165,14 @@ const ProductDetail = () => {
     return null;
   }
 
-  const productImages = product.images || ['https://via.placeholder.com/500'];
+  const productImages = (product.images || [])
+    .map((image) => (typeof image === 'string' ? image : image?.url))
+    .filter(Boolean);
+  const safeProductImages = productImages.length ? productImages : ['https://via.placeholder.com/500'];
   const availableStock = Number(product.stock ?? product.quantityAvailable ?? 0);
   const minOrderQty = getMinimumOrderQuantity(product);
   const isMqqRestricted = minOrderQty > 1;
+  const metadataEntries = Object.entries(product.attributes || {}).filter(([, value]) => value !== '' && value !== null && value !== undefined);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -173,13 +181,13 @@ const ProductDetail = () => {
         <div>
           <div className="bg-gray-100 rounded-lg overflow-hidden mb-4">
             <img
-              src={productImages[activeImage]}
+              src={safeProductImages[activeImage]}
               alt={product.name}
               className="w-full h-96 object-contain"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto">
-            {productImages.map((img, index) => (
+            {safeProductImages.map((img, index) => (
               <button
                 key={index}
                 onClick={() => setActiveImage(index)}
@@ -226,6 +234,19 @@ const ProductDetail = () => {
               </span>
             </div>
           </div>
+
+          {metadataEntries.length > 0 && (
+            <div className="mb-4 border rounded-lg p-3 bg-gray-50">
+              <h3 className="font-semibold mb-2">Product Attributes</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {metadataEntries.map(([key, value]) => (
+                  <div key={key} className="text-sm text-gray-700">
+                    <span className="font-medium">{key.replaceAll('_', ' ')}:</span> {String(value)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isMqqRestricted && (
             <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-3">
